@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>812. Largest Triangle Area Visualizer</title>
+  <style>
+    :root {
+      --bg: #f7f7f2;
+      --panel: #fff;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --grid: #e8e1d7;
+      --accent: #0f766e;
+      --accent-2: #2563eb;
+      --hot: #c2410c;
+      --best: #15803d;
+      --shadow: 0 16px 44px rgba(22, 32, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 30%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1360px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 840px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(560px, 1.15fr) minmax(380px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .bar,
+    .panel {
+      padding: 16px;
+    }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .bar h2,
+    .panel h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls,
+    .sets {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button,
+    select {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: #f8fafc;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: #115e59;
+    }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    select {
+      padding: 0 10px;
+    }
+
+    .canvas-wrap {
+      padding: 16px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-height: 430px;
+      aspect-ratio: 1.34;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .grid {
+      stroke: var(--grid);
+      stroke-width: 1;
+    }
+
+    .axis {
+      stroke: #9aa5b5;
+      stroke-width: 1.2;
+    }
+
+    .candidate {
+      fill: rgba(194, 65, 12, 0.16);
+      stroke: var(--hot);
+      stroke-width: 3;
+    }
+
+    .best {
+      fill: rgba(21, 128, 61, 0.14);
+      stroke: var(--best);
+      stroke-width: 4;
+      stroke-dasharray: 8 6;
+    }
+
+    .point {
+      fill: #fff;
+      stroke: var(--ink);
+      stroke-width: 2.5;
+      cursor: grab;
+    }
+
+    .point.active {
+      fill: #fed7aa;
+      stroke: var(--hot);
+    }
+
+    .point.best-point {
+      fill: #dcfce7;
+      stroke: var(--best);
+    }
+
+    .label {
+      fill: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+      paint-order: stroke;
+      stroke: #fff;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+
+    .coord {
+      fill: var(--muted);
+      font-size: 12px;
+      paint-order: stroke;
+      stroke: #fff;
+      stroke-width: 4px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric,
+    .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span,
+    .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong,
+    .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel {
+      border-top: 1px solid var(--line);
+    }
+
+    .formula {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .formula b {
+      color: var(--hot);
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .code {
+      margin: 0;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .line {
+      display: block;
+      padding: 0 8px;
+      border-radius: 4px;
+    }
+
+    .line.hotline {
+      background: rgba(194, 65, 12, 0.45);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      background: #f8fafc;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .new-best {
+      color: var(--best);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1000px) {
+      main {
+        width: min(100vw - 20px, 780px);
+        padding-top: 16px;
+      }
+
+      .header,
+      .bar {
+        display: block;
+      }
+
+      .controls,
+      .sets {
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      svg {
+        min-height: 340px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: calc(100vw - 14px);
+      }
+
+      .bar,
+      .panel,
+      .canvas-wrap {
+        padding: 12px;
+      }
+
+      .metrics,
+      .states {
+        grid-template-columns: 1fr;
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>812. Largest Triangle Area</h1>
+        <p class="lead">枚舉任意三個不同點，使用 shoelace formula 算三角形面積，持續更新最大值。這題點數小，O(n³) 的 brute force 就是標準解。</p>
+      </div>
+      <div class="sets">
+        <select id="sampleSelect" aria-label="選擇測資">
+          <option value="classic">LeetCode 範例感</option>
+          <option value="spread">分散點</option>
+          <option value="collinear">含共線點</option>
+          <option value="small">小測資</option>
+        </select>
+        <button id="randomBtn" type="button">隨機點</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>枚舉三點</h2>
+            <p class="hint">橘色是目前候選三角形，綠色是目前找到的最大三角形。拖曳點會重新計算所有組合。</p>
+          </div>
+          <div class="controls">
+            <button class="icon" id="prevBtn" type="button" aria-label="上一組">‹</button>
+            <button class="primary" id="playBtn" type="button">播放</button>
+            <button class="icon" id="nextBtn" type="button" aria-label="下一組">›</button>
+            <button id="resetBtn" type="button">重設</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <svg id="canvas" viewBox="0 0 720 520" role="img" aria-label="Largest triangle area interactive visualization"></svg>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <span>組合進度</span>
+            <strong id="stepMetric">1 / 10</strong>
+          </div>
+          <div class="metric">
+            <span>目前面積</span>
+            <strong id="areaMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>最大面積</span>
+            <strong id="bestMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>最佳三點</span>
+            <strong id="bestComboMetric">-</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>核心公式</h2>
+          <div class="formula">
+            area(A,B,C) = |<b>x1(y2-y3) + x2(y3-y1) + x3(y1-y2)</b>| / 2
+          </div>
+          <p class="explain" id="explainText"></p>
+        </section>
+
+        <section class="panel">
+          <h2>變數狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>i, j, k</span>
+              <code id="ijkState">0, 1, 2</code>
+            </div>
+            <div class="state">
+              <span>candidate</span>
+              <code id="candidateState">P0, P1, P2</code>
+            </div>
+            <div class="state">
+              <span>shoelace raw</span>
+              <code id="rawState">0</code>
+            </div>
+            <div class="state">
+              <span>max update</span>
+              <code id="updateState">false</code>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼對照</h2>
+          <pre class="code"><code><span class="line" data-code="init">ans = 0</span>
+<span class="line" data-code="i">for i in range(n):</span>
+<span class="line" data-code="j">  for j in range(i + 1, n):</span>
+<span class="line" data-code="k">    for k in range(j + 1, n):</span>
+<span class="line hotline" data-code="area">      area = triangleArea(points[i], points[j], points[k])</span>
+<span class="line" data-code="max">      ans = max(ans, area)</span>
+<span class="line" data-code="return">return ans</span></code></pre>
+        </section>
+
+        <section class="panel">
+          <h2>最近檢查的組合</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>combo</th>
+                  <th>raw</th>
+                  <th>area</th>
+                  <th>max</th>
+                </tr>
+              </thead>
+              <tbody id="historyRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const svg = document.querySelector("#canvas");
+    const sampleSelect = document.querySelector("#sampleSelect");
+    const stepMetric = document.querySelector("#stepMetric");
+    const areaMetric = document.querySelector("#areaMetric");
+    const bestMetric = document.querySelector("#bestMetric");
+    const bestComboMetric = document.querySelector("#bestComboMetric");
+    const explainText = document.querySelector("#explainText");
+    const ijkState = document.querySelector("#ijkState");
+    const candidateState = document.querySelector("#candidateState");
+    const rawState = document.querySelector("#rawState");
+    const updateState = document.querySelector("#updateState");
+    const historyRows = document.querySelector("#historyRows");
+    const playBtn = document.querySelector("#playBtn");
+
+    const W = 720;
+    const H = 520;
+    const origin = { x: 360, y: 280 };
+    const scale = 44;
+    const samples = {
+      classic: [
+        { x: 0, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 0 },
+        { x: 0, y: 2 },
+        { x: 2, y: 0 }
+      ],
+      spread: [
+        { x: -5, y: -2 },
+        { x: -3, y: 3 },
+        { x: 1, y: 4 },
+        { x: 5, y: 1 },
+        { x: 3, y: -4 },
+        { x: -2, y: -3 }
+      ],
+      collinear: [
+        { x: -5, y: -2 },
+        { x: -3, y: -1 },
+        { x: -1, y: 0 },
+        { x: 1, y: 1 },
+        { x: 4, y: 3 },
+        { x: 2, y: -3 }
+      ],
+      small: [
+        { x: -3, y: -2 },
+        { x: 1, y: 3 },
+        { x: 4, y: -1 },
+        { x: -1, y: 1 }
+      ]
+    };
+
+    let points = clone(samples.classic);
+    let combos = buildCombos(points.length);
+    let step = 0;
+    let playing = false;
+    let timer = null;
+    let dragging = null;
+
+    function clone(source) {
+      return source.map((p) => ({ x: p.x, y: p.y }));
+    }
+
+    function buildCombos(n) {
+      const out = [];
+      for (let i = 0; i < n; i += 1) {
+        for (let j = i + 1; j < n; j += 1) {
+          for (let k = j + 1; k < n; k += 1) {
+            out.push([i, j, k]);
+          }
+        }
+      }
+      return out;
+    }
+
+    function triangleData(combo) {
+      const [i, j, k] = combo;
+      const a = points[i];
+      const b = points[j];
+      const c = points[k];
+      const raw = a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
+      return {
+        combo,
+        raw,
+        area: Math.abs(raw) / 2
+      };
+    }
+
+    function prefixBest(upToInclusive) {
+      let best = { area: -Infinity, combo: null, index: -1, raw: 0 };
+      for (let idx = 0; idx <= upToInclusive && idx < combos.length; idx += 1) {
+        const item = triangleData(combos[idx]);
+        if (item.area > best.area) {
+          best = { ...item, index: idx };
+        }
+      }
+      return best.area === -Infinity ? { area: 0, combo: null, index: -1, raw: 0 } : best;
+    }
+
+    function previousBest(beforeIndex) {
+      return prefixBest(beforeIndex - 1);
+    }
+
+    function fmt(value) {
+      return Number.isInteger(value) ? String(value) : value.toFixed(2);
+    }
+
+    function labelCombo(combo) {
+      return combo ? combo.map((i) => `P${i}`).join(", ") : "-";
+    }
+
+    function toScreen(p) {
+      return { x: origin.x + p.x * scale, y: origin.y - p.y * scale };
+    }
+
+    function fromScreen(x, y) {
+      return {
+        x: Math.round((x - origin.x) / scale),
+        y: Math.round((origin.y - y) / scale)
+      };
+    }
+
+    function node(name, attrs = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+      return el;
+    }
+
+    function clearSvg() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function drawGrid() {
+      for (let x = origin.x % scale; x <= W; x += scale) {
+        svg.appendChild(node("line", { x1: x, y1: 0, x2: x, y2: H, class: "grid" }));
+      }
+      for (let y = origin.y % scale; y <= H; y += scale) {
+        svg.appendChild(node("line", { x1: 0, y1: y, x2: W, y2: y, class: "grid" }));
+      }
+      svg.appendChild(node("line", { x1: 0, y1: origin.y, x2: W, y2: origin.y, class: "axis" }));
+      svg.appendChild(node("line", { x1: origin.x, y1: 0, x2: origin.x, y2: H, class: "axis" }));
+    }
+
+    function drawTriangle(combo, className) {
+      if (!combo) return;
+      const pts = combo.map((idx) => toScreen(points[idx]));
+      svg.appendChild(node("polygon", {
+        points: pts.map((p) => `${p.x},${p.y}`).join(" "),
+        class: className
+      }));
+    }
+
+    function drawPoints(activeCombo, bestCombo) {
+      const active = new Set(activeCombo || []);
+      const best = new Set(bestCombo || []);
+      points.forEach((point, index) => {
+        const screen = toScreen(point);
+        const circle = node("circle", {
+          cx: screen.x,
+          cy: screen.y,
+          r: 10,
+          class: `point ${active.has(index) ? "active" : ""} ${best.has(index) ? "best-point" : ""}`,
+          "data-index": index
+        });
+        circle.addEventListener("pointerdown", startDrag);
+        svg.appendChild(circle);
+
+        const label = node("text", { x: screen.x + 13, y: screen.y - 12, class: "label" });
+        label.textContent = `P${index}`;
+        svg.appendChild(label);
+
+        const coord = node("text", { x: screen.x + 13, y: screen.y + 8, class: "coord" });
+        coord.textContent = `(${point.x}, ${point.y})`;
+        svg.appendChild(coord);
+      });
+    }
+
+    function draw() {
+      clearSvg();
+      drawGrid();
+      const currentCombo = combos[step];
+      const best = prefixBest(step);
+      drawTriangle(best.combo, "best");
+      drawTriangle(currentCombo, "candidate");
+      drawPoints(currentCombo, best.combo);
+    }
+
+    function renderState() {
+      const current = triangleData(combos[step]);
+      const bestBefore = previousBest(step);
+      const best = prefixBest(step);
+      const isUpdate = current.area > bestBefore.area;
+
+      stepMetric.textContent = `${step + 1} / ${combos.length}`;
+      areaMetric.textContent = fmt(current.area);
+      bestMetric.textContent = fmt(best.area);
+      bestComboMetric.textContent = labelCombo(best.combo);
+      ijkState.textContent = current.combo.join(", ");
+      candidateState.textContent = labelCombo(current.combo);
+      rawState.textContent = fmt(current.raw);
+      updateState.textContent = isUpdate ? "true, 更新 ans" : "false, 保留 ans";
+
+      explainText.textContent = `目前檢查 ${labelCombo(current.combo)}。shoelace raw = ${fmt(current.raw)}，面積 = |${fmt(current.raw)}| / 2 = ${fmt(current.area)}。${isUpdate ? "它比之前最大值更大，所以更新 ans。" : "它沒有超過目前最大值，所以 ans 不變。"}`;
+    }
+
+    function renderHistory() {
+      historyRows.innerHTML = "";
+      const start = Math.max(0, step - 5);
+      let best = 0;
+      for (let idx = 0; idx <= step; idx += 1) {
+        best = Math.max(best, triangleData(combos[idx]).area);
+      }
+      for (let idx = start; idx <= step; idx += 1) {
+        const item = triangleData(combos[idx]);
+        const before = previousBest(idx).area;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${labelCombo(item.combo)}</td>
+          <td>${fmt(item.raw)}</td>
+          <td>${fmt(item.area)}</td>
+          <td class="${item.area > before ? "new-best" : ""}">${item.area > before ? "更新" : "不變"}</td>
+        `;
+        historyRows.appendChild(tr);
+      }
+    }
+
+    function renderCodeHighlight() {
+      document.querySelectorAll(".line").forEach((line) => line.classList.remove("hotline"));
+      document.querySelector('[data-code="area"]').classList.add("hotline");
+      document.querySelector('[data-code="max"]').classList.add("hotline");
+    }
+
+    function render() {
+      combos = buildCombos(points.length);
+      step = Math.max(0, Math.min(step, combos.length - 1));
+      draw();
+      renderState();
+      renderHistory();
+      renderCodeHighlight();
+    }
+
+    function next() {
+      step = step + 1 >= combos.length ? 0 : step + 1;
+      render();
+    }
+
+    function prev() {
+      step = Math.max(0, step - 1);
+      render();
+    }
+
+    function reset() {
+      stop();
+      step = 0;
+      render();
+    }
+
+    function play() {
+      if (playing) {
+        stop();
+        return;
+      }
+      playing = true;
+      playBtn.textContent = "暫停";
+      timer = window.setInterval(() => {
+        if (step + 1 >= combos.length) {
+          stop();
+          return;
+        }
+        next();
+      }, 850);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = "播放";
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function svgPoint(event) {
+      const rect = svg.getBoundingClientRect();
+      return {
+        x: ((event.clientX - rect.left) / rect.width) * W,
+        y: ((event.clientY - rect.top) / rect.height) * H
+      };
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function startDrag(event) {
+      dragging = Number(event.currentTarget.dataset.index);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      stop();
+    }
+
+    svg.addEventListener("pointermove", (event) => {
+      if (dragging === null) return;
+      const p = svgPoint(event);
+      const model = fromScreen(p.x, p.y);
+      points[dragging] = {
+        x: clamp(model.x, -7, 7),
+        y: clamp(model.y, -5, 6)
+      };
+      step = 0;
+      render();
+    });
+
+    svg.addEventListener("pointerup", () => {
+      dragging = null;
+    });
+
+    svg.addEventListener("pointercancel", () => {
+      dragging = null;
+    });
+
+    document.querySelector("#nextBtn").addEventListener("click", next);
+    document.querySelector("#prevBtn").addEventListener("click", prev);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    playBtn.addEventListener("click", play);
+
+    sampleSelect.addEventListener("change", () => {
+      points = clone(samples[sampleSelect.value]);
+      reset();
+    });
+
+    document.querySelector("#randomBtn").addEventListener("click", () => {
+      const used = new Set();
+      points = [];
+      while (points.length < 6) {
+        const x = Math.floor(Math.random() * 13) - 6;
+        const y = Math.floor(Math.random() * 11) - 5;
+        const key = `${x},${y}`;
+        if (!used.has(key)) {
+          used.add(key);
+          points.push({ x, y });
+        }
+      }
+      reset();
+    });
+
+    render();
+  </script>
+</body>
+</html>

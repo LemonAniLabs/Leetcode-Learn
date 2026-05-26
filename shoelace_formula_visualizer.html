@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shoelace Formula Interactive Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f3ec;
+      --panel: #ffffff;
+      --ink: #17212b;
+      --muted: #637081;
+      --line: #d8dde6;
+      --grid: #e8ded2;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --warn: #c2410c;
+      --blue: #2563eb;
+      --green: #15803d;
+      --shadow: 0 18px 45px rgba(23, 33, 43, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 32%),
+        linear-gradient(315deg, rgba(194, 65, 12, 0.08), transparent 30%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1320px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 32px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: 0;
+      line-height: 1;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(540px, 1.1fr) minmax(360px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .workspace,
+    .side {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(216, 221, 230, 0.9);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .workspace {
+      overflow: hidden;
+    }
+
+    .stage-head,
+    .panel {
+      padding: 16px;
+    }
+
+    .stage-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stage-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .toolbar,
+    .shape-picks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    button,
+    select {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 12px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+
+    button:hover {
+      border-color: #a8b3c2;
+      background: #f8fafc;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      border-color: var(--accent-dark);
+      background: var(--accent-dark);
+    }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    select {
+      padding: 0 10px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      padding: 16px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1.35;
+      min-height: 410px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .axis {
+      stroke: #96a1b3;
+      stroke-width: 1.2;
+    }
+
+    .grid {
+      stroke: var(--grid);
+      stroke-width: 1;
+    }
+
+    .polygon {
+      fill: rgba(15, 118, 110, 0.12);
+      stroke: var(--accent);
+      stroke-width: 3;
+    }
+
+    .inactive-edge {
+      stroke: rgba(99, 112, 129, 0.38);
+      stroke-width: 2.2;
+    }
+
+    .active-edge {
+      stroke: var(--warn);
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+
+    .cross-a {
+      stroke: var(--blue);
+      stroke-width: 3.5;
+      stroke-dasharray: 7 6;
+      stroke-linecap: round;
+    }
+
+    .cross-b {
+      stroke: var(--green);
+      stroke-width: 3.5;
+      stroke-dasharray: 4 7;
+      stroke-linecap: round;
+    }
+
+    .point {
+      fill: #fff;
+      stroke: var(--ink);
+      stroke-width: 2.5;
+      cursor: grab;
+    }
+
+    .point.active {
+      fill: #fed7aa;
+      stroke: var(--warn);
+    }
+
+    .point:active {
+      cursor: grabbing;
+    }
+
+    .label {
+      fill: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+      paint-order: stroke;
+      stroke: #fff;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+
+    .coord {
+      fill: var(--muted);
+      font-size: 12px;
+      paint-order: stroke;
+      stroke: #fff;
+      stroke-width: 4px;
+    }
+
+    .readout {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(18px, 2.6vw, 26px);
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .side {
+      overflow: hidden;
+    }
+
+    .panel + .panel {
+      border-top: 1px solid var(--line);
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .formula {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .formula .hot {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .step-text {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      background: #f8fafc;
+      font-weight: 700;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tr.active-row {
+      background: #fff7ed;
+      outline: 2px solid rgba(194, 65, 12, 0.2);
+      outline-offset: -2px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .state-box {
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      min-width: 0;
+    }
+
+    .state-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .state-box code {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--accent);
+    }
+
+    .swatch.hot {
+      background: var(--warn);
+    }
+
+    .swatch.blue {
+      background: var(--blue);
+    }
+
+    .swatch.green {
+      background: var(--green);
+    }
+
+    @media (max-width: 980px) {
+      main {
+        width: min(100vw - 20px, 760px);
+        padding-top: 16px;
+      }
+
+      .topbar,
+      .stage-head {
+        display: block;
+      }
+
+      .toolbar,
+      .shape-picks {
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      svg {
+        min-height: 330px;
+      }
+
+      .readout {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: calc(100vw - 14px);
+      }
+
+      .stage-head,
+      .panel,
+      .canvas-wrap {
+        padding: 12px;
+      }
+
+      .readout,
+      .mini-grid {
+        grid-template-columns: 1fr;
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      svg {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="topbar" aria-labelledby="title">
+      <div>
+        <h1 id="title">Shoelace Formula</h1>
+        <p class="lead">把多邊形頂點依序走一圈，每條邊都產生一個 signed cross product。所有項目加總後取絕對值再除以 2，就是多邊形面積。</p>
+      </div>
+      <div class="shape-picks">
+        <select id="shapeSelect" aria-label="選擇範例形狀">
+          <option value="pentagon">五邊形</option>
+          <option value="triangle">三角形</option>
+          <option value="concave">凹多邊形</option>
+          <option value="clockwise">順時針範例</option>
+        </select>
+        <button id="reverseBtn" type="button">反轉方向</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="workspace">
+        <div class="stage-head">
+          <div>
+            <h2 class="stage-title">頂點順序與目前處理的邊</h2>
+            <p class="hint">拖曳頂點可改變座標。按下一步時，橘色邊會從 Pᵢ 走到 Pᵢ₊₁，右側同步更新變數與累加值。</p>
+          </div>
+          <div class="toolbar" aria-label="步驟控制">
+            <button class="icon" id="prevBtn" type="button" title="上一步" aria-label="上一步">‹</button>
+            <button class="primary" id="playBtn" type="button">播放</button>
+            <button class="icon" id="nextBtn" type="button" title="下一步" aria-label="下一步">›</button>
+            <button id="resetBtn" type="button">重設</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <svg id="canvas" viewBox="0 0 720 520" role="img" aria-label="Shoelace formula polygon visualization"></svg>
+        </div>
+
+        <div class="readout">
+          <div class="metric">
+            <span>目前步驟</span>
+            <strong id="stepMetric">0 / 5</strong>
+          </div>
+          <div class="metric">
+            <span>signed sum</span>
+            <strong id="sumMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>signed area</span>
+            <strong id="signedAreaMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>area</span>
+            <strong id="areaMetric">0</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="side">
+        <section class="panel">
+          <h2>公式</h2>
+          <div class="formula" id="formulaBox">
+            area = 1/2 * |Σ <span class="hot">(xᵢyᵢ₊₁ - yᵢxᵢ₊₁)</span>|
+          </div>
+          <p class="step-text" id="explainText"></p>
+          <div class="legend" aria-label="圖例">
+            <span class="key"><i class="swatch"></i>多邊形</span>
+            <span class="key"><i class="swatch hot"></i>目前邊</span>
+            <span class="key"><i class="swatch blue"></i>xᵢyᵢ₊₁</span>
+            <span class="key"><i class="swatch green"></i>yᵢxᵢ₊₁</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>目前變數</h2>
+          <div class="mini-grid">
+            <div class="state-box">
+              <span>i</span>
+              <code id="iState">0</code>
+            </div>
+            <div class="state-box">
+              <span>next</span>
+              <code id="nextState">1</code>
+            </div>
+            <div class="state-box">
+              <span>Pᵢ = (xᵢ, yᵢ)</span>
+              <code id="piState">(0, 0)</code>
+            </div>
+            <div class="state-box">
+              <span>Pᵢ₊₁ = (xᵢ₊₁, yᵢ₊₁)</span>
+              <code id="pjState">(0, 0)</code>
+            </div>
+            <div class="state-box">
+              <span>xᵢyᵢ₊₁</span>
+              <code id="forwardState">0</code>
+            </div>
+            <div class="state-box">
+              <span>yᵢxᵢ₊₁</span>
+              <code id="backwardState">0</code>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>累加表</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>edge</th>
+                  <th>xᵢyᵢ₊₁</th>
+                  <th>yᵢxᵢ₊₁</th>
+                  <th>cross</th>
+                  <th>prefix sum</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const svg = document.querySelector("#canvas");
+    const shapeSelect = document.querySelector("#shapeSelect");
+    const rows = document.querySelector("#rows");
+    const stepMetric = document.querySelector("#stepMetric");
+    const sumMetric = document.querySelector("#sumMetric");
+    const signedAreaMetric = document.querySelector("#signedAreaMetric");
+    const areaMetric = document.querySelector("#areaMetric");
+    const explainText = document.querySelector("#explainText");
+    const iState = document.querySelector("#iState");
+    const nextState = document.querySelector("#nextState");
+    const piState = document.querySelector("#piState");
+    const pjState = document.querySelector("#pjState");
+    const forwardState = document.querySelector("#forwardState");
+    const backwardState = document.querySelector("#backwardState");
+    const playBtn = document.querySelector("#playBtn");
+
+    const W = 720;
+    const H = 520;
+    const origin = { x: 360, y: 280 };
+    const scale = 42;
+    const shapes = {
+      pentagon: [
+        { x: -4, y: -2 },
+        { x: -1, y: 3 },
+        { x: 3, y: 2 },
+        { x: 5, y: -1 },
+        { x: 1, y: -4 }
+      ],
+      triangle: [
+        { x: -4, y: -3 },
+        { x: -1, y: 4 },
+        { x: 5, y: -2 }
+      ],
+      concave: [
+        { x: -5, y: -3 },
+        { x: -3, y: 3 },
+        { x: 0, y: 1 },
+        { x: 3, y: 4 },
+        { x: 5, y: -2 }
+      ],
+      clockwise: [
+        { x: -4, y: -3 },
+        { x: 3, y: -4 },
+        { x: 5, y: 1 },
+        { x: 0, y: 4 },
+        { x: -5, y: 2 }
+      ]
+    };
+
+    let points = clonePoints(shapes.pentagon);
+    let step = 0;
+    let playing = false;
+    let timer = null;
+    let dragging = null;
+
+    function clonePoints(source) {
+      return source.map((p) => ({ x: p.x, y: p.y }));
+    }
+
+    function toScreen(p) {
+      return {
+        x: origin.x + p.x * scale,
+        y: origin.y - p.y * scale
+      };
+    }
+
+    function fromScreen(x, y) {
+      return {
+        x: Math.round((x - origin.x) / scale),
+        y: Math.round((origin.y - y) / scale)
+      };
+    }
+
+    function fmt(value) {
+      return Number.isInteger(value) ? String(value) : value.toFixed(2);
+    }
+
+    function edgeTerms(index) {
+      const i = index;
+      const j = (index + 1) % points.length;
+      const a = points[i];
+      const b = points[j];
+      const forward = a.x * b.y;
+      const backward = a.y * b.x;
+      return {
+        i,
+        j,
+        a,
+        b,
+        forward,
+        backward,
+        cross: forward - backward
+      };
+    }
+
+    function terms() {
+      return points.map((_, index) => edgeTerms(index));
+    }
+
+    function prefixSum(upToExclusive) {
+      return terms()
+        .slice(0, upToExclusive)
+        .reduce((sum, item) => sum + item.cross, 0);
+    }
+
+    function clearSvg() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function node(name, attrs = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      for (const [key, value] of Object.entries(attrs)) {
+        el.setAttribute(key, value);
+      }
+      return el;
+    }
+
+    function drawGrid() {
+      for (let x = origin.x % scale; x <= W; x += scale) {
+        svg.appendChild(node("line", { x1: x, y1: 0, x2: x, y2: H, class: "grid" }));
+      }
+      for (let y = origin.y % scale; y <= H; y += scale) {
+        svg.appendChild(node("line", { x1: 0, y1: y, x2: W, y2: y, class: "grid" }));
+      }
+      svg.appendChild(node("line", { x1: 0, y1: origin.y, x2: W, y2: origin.y, class: "axis" }));
+      svg.appendChild(node("line", { x1: origin.x, y1: 0, x2: origin.x, y2: H, class: "axis" }));
+    }
+
+    function drawPolygon() {
+      const screenPoints = points.map(toScreen);
+      const polygonPoints = screenPoints.map((p) => `${p.x},${p.y}`).join(" ");
+      svg.appendChild(node("polygon", { points: polygonPoints, class: "polygon" }));
+
+      screenPoints.forEach((p, index) => {
+        const q = screenPoints[(index + 1) % screenPoints.length];
+        svg.appendChild(node("line", {
+          x1: p.x,
+          y1: p.y,
+          x2: q.x,
+          y2: q.y,
+          class: "inactive-edge"
+        }));
+      });
+
+      if (step < points.length) {
+        const current = edgeTerms(step);
+        const a = toScreen(current.a);
+        const b = toScreen(current.b);
+        svg.appendChild(node("line", {
+          x1: a.x,
+          y1: a.y,
+          x2: b.x,
+          y2: b.y,
+          class: "active-edge"
+        }));
+        svg.appendChild(node("line", {
+          x1: origin.x,
+          y1: a.y,
+          x2: b.x,
+          y2: origin.y,
+          class: "cross-a"
+        }));
+        svg.appendChild(node("line", {
+          x1: a.x,
+          y1: origin.y,
+          x2: origin.x,
+          y2: b.y,
+          class: "cross-b"
+        }));
+      }
+
+      screenPoints.forEach((p, index) => {
+        const circle = node("circle", {
+          cx: p.x,
+          cy: p.y,
+          r: 10,
+          class: `point ${index === step || index === (step + 1) % points.length ? "active" : ""}`,
+          "data-index": index
+        });
+        circle.addEventListener("pointerdown", startDrag);
+        svg.appendChild(circle);
+
+        const label = node("text", {
+          x: p.x + 13,
+          y: p.y - 12,
+          class: "label"
+        });
+        label.textContent = `P${index}`;
+        svg.appendChild(label);
+
+        const coord = node("text", {
+          x: p.x + 13,
+          y: p.y + 7,
+          class: "coord"
+        });
+        coord.textContent = `(${points[index].x}, ${points[index].y})`;
+        svg.appendChild(coord);
+      });
+    }
+
+    function draw() {
+      clearSvg();
+      drawGrid();
+      drawPolygon();
+    }
+
+    function renderTable() {
+      rows.innerHTML = "";
+      let sum = 0;
+      terms().forEach((item, index) => {
+        sum += item.cross;
+        const tr = document.createElement("tr");
+        if (index === step && step < points.length) tr.className = "active-row";
+        tr.innerHTML = `
+          <td>P${item.i} → P${item.j}</td>
+          <td>${fmt(item.forward)}</td>
+          <td>${fmt(item.backward)}</td>
+          <td>${fmt(item.cross)}</td>
+          <td>${index < step ? fmt(sum) : index === step ? "待加入" : ""}</td>
+        `;
+        rows.appendChild(tr);
+      });
+    }
+
+    function renderState() {
+      const sum = prefixSum(step);
+      const signedArea = sum / 2;
+      stepMetric.textContent = `${step} / ${points.length}`;
+      sumMetric.textContent = fmt(sum);
+      signedAreaMetric.textContent = fmt(signedArea);
+      areaMetric.textContent = fmt(Math.abs(signedArea));
+
+      if (step < points.length) {
+        const item = edgeTerms(step);
+        iState.textContent = String(item.i);
+        nextState.textContent = String(item.j);
+        piState.textContent = `(${item.a.x}, ${item.a.y})`;
+        pjState.textContent = `(${item.b.x}, ${item.b.y})`;
+        forwardState.textContent = `${item.a.x} * ${item.b.y} = ${fmt(item.forward)}`;
+        backwardState.textContent = `${item.a.y} * ${item.b.x} = ${fmt(item.backward)}`;
+        explainText.textContent = `第 ${step + 1} 條邊從 P${item.i} 走到 P${item.j}。本步 cross = ${fmt(item.forward)} - ${fmt(item.backward)} = ${fmt(item.cross)}。按下一步後會把它加入 signed sum。`;
+      } else {
+        iState.textContent = "done";
+        nextState.textContent = "done";
+        piState.textContent = "-";
+        pjState.textContent = "-";
+        forwardState.textContent = "-";
+        backwardState.textContent = "-";
+        explainText.textContent = `所有邊都處理完。signed sum = ${fmt(sum)}，signed area = ${fmt(signedArea)}。面積不看方向，所以 area = |${fmt(signedArea)}| = ${fmt(Math.abs(signedArea))}。`;
+      }
+    }
+
+    function render() {
+      step = Math.max(0, Math.min(step, points.length));
+      draw();
+      renderTable();
+      renderState();
+    }
+
+    function next() {
+      if (step < points.length) {
+        step += 1;
+      } else {
+        step = 0;
+      }
+      render();
+    }
+
+    function prev() {
+      step = Math.max(0, step - 1);
+      render();
+    }
+
+    function reset() {
+      step = 0;
+      stop();
+      render();
+    }
+
+    function play() {
+      if (playing) {
+        stop();
+        return;
+      }
+      playing = true;
+      playBtn.textContent = "暫停";
+      timer = window.setInterval(() => {
+        if (step >= points.length) {
+          stop();
+          return;
+        }
+        next();
+      }, 1050);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = "播放";
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function svgPoint(event) {
+      const rect = svg.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * W;
+      const y = ((event.clientY - rect.top) / rect.height) * H;
+      return { x, y };
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function startDrag(event) {
+      dragging = Number(event.currentTarget.dataset.index);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      stop();
+    }
+
+    svg.addEventListener("pointermove", (event) => {
+      if (dragging === null) return;
+      const p = svgPoint(event);
+      const model = fromScreen(p.x, p.y);
+      points[dragging] = {
+        x: clamp(model.x, -8, 8),
+        y: clamp(model.y, -5, 6)
+      };
+      render();
+    });
+
+    svg.addEventListener("pointerup", () => {
+      dragging = null;
+    });
+
+    svg.addEventListener("pointercancel", () => {
+      dragging = null;
+    });
+
+    document.querySelector("#nextBtn").addEventListener("click", next);
+    document.querySelector("#prevBtn").addEventListener("click", prev);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    playBtn.addEventListener("click", play);
+
+    document.querySelector("#reverseBtn").addEventListener("click", () => {
+      points.reverse();
+      reset();
+    });
+
+    shapeSelect.addEventListener("change", () => {
+      points = clonePoints(shapes[shapeSelect.value]);
+      reset();
+    });
+
+    render();
+  </script>
+</body>
+</html>
