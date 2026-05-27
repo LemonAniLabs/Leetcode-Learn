@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3781. Maximum Score After Binary Swaps Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --panel: #ffffff;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --blue: #2563eb;
+      --hot: #c2410c;
+      --best: #15803d;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1380px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 880px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(600px, 1.15fr) minmax(390px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar,
+    .panel {
+      padding: 16px;
+    }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls,
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button,
+    select,
+    input {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: #f8fafc;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: var(--accent-dark);
+    }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    select,
+    input {
+      padding: 0 10px;
+    }
+
+    input {
+      width: min(340px, 100%);
+    }
+
+    .stage {
+      padding: 16px;
+    }
+
+    .array {
+      display: grid;
+      grid-template-columns: repeat(var(--n), minmax(62px, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .cell {
+      position: relative;
+      min-width: 0;
+      padding: 10px 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+
+    .cell.current {
+      border-color: var(--hot);
+      background: #fff7ed;
+      transform: translateY(-2px);
+    }
+
+    .cell.available {
+      border-color: rgba(37, 99, 235, 0.35);
+      background: #eff6ff;
+    }
+
+    .cell.chosen {
+      border-color: rgba(21, 128, 61, 0.55);
+      background: #ecfdf5;
+    }
+
+    .idx {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .num {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .bit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      margin-top: 10px;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 800;
+      background: #64748b;
+    }
+
+    .bit.one {
+      background: var(--accent);
+    }
+
+    .tag {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: -12px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--hot);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 22px;
+      opacity: 0;
+    }
+
+    .cell.current .tag,
+    .cell.chosen .tag {
+      opacity: 1;
+    }
+
+    .heap-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .box {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .box-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .heap-list,
+    .pick-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 44px;
+      align-items: flex-start;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .pill.top {
+      border-color: var(--hot);
+      background: #fff7ed;
+      color: var(--hot);
+      font-weight: 800;
+    }
+
+    .pill.pick {
+      border-color: var(--best);
+      background: #ecfdf5;
+      color: var(--best);
+      font-weight: 800;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric,
+    .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span,
+    .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong,
+    .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel {
+      border-top: 1px solid var(--line);
+    }
+
+    .formula {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .formula b {
+      color: var(--hot);
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .code {
+      margin: 10px 0 0;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .line {
+      display: block;
+      padding: 0 8px;
+      border-radius: 4px;
+    }
+
+    .line.hotline {
+      background: rgba(194, 65, 12, 0.45);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 500px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      background: var(--soft);
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .picked {
+      color: var(--best);
+      font-weight: 800;
+    }
+
+    .error {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      background: #fef2f2;
+      color: #991b1b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1040px) {
+      main {
+        width: min(100vw - 20px, 800px);
+        padding-top: 16px;
+      }
+
+      .header,
+      .bar {
+        display: block;
+      }
+
+      .controls,
+      .input-row {
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      main {
+        width: calc(100vw - 14px);
+      }
+
+      .bar,
+      .panel,
+      .stage {
+        padding: 12px;
+      }
+
+      .array {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .heap-area,
+      .metrics,
+      .states {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>3781. Maximum Score After Binary Swaps</h1>
+        <p class="lead">每個 `1` 最後可以透過不斷和左邊的 `0` 交換，搬到目前前綴裡某個位置。從左到右掃描時，每遇到一個 `1`，就在目前看過但尚未被選走的 nums 裡挑最大值。</p>
+      </div>
+      <div class="input-row">
+        <select id="sampleSelect" aria-label="選擇範例">
+          <option value="mixed">混合範例</option>
+          <option value="lateOnes">1 集中右側</option>
+          <option value="already">不用交換也好懂</option>
+          <option value="duplicates">重複數值</option>
+        </select>
+        <button id="applyBtn" type="button">套用輸入</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>掃描前綴與 Max Heap</h2>
+            <p class="hint">每一步先把 `nums[i]` 放進 heap。若 `s[i] == '1'`，代表現在必須選一個前綴候選貢獻分數，所以 pop 最大值。</p>
+          </div>
+          <div class="controls">
+            <button class="icon" id="prevBtn" type="button" aria-label="上一步">‹</button>
+            <button class="primary" id="playBtn" type="button">播放</button>
+            <button class="icon" id="nextBtn" type="button" aria-label="下一步">›</button>
+            <button id="resetBtn" type="button">重設</button>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="input-row" style="justify-content: flex-start; margin-bottom: 14px;">
+            <input id="numsInput" aria-label="nums input" value="8, 3, 9, 2, 7, 6">
+            <input id="sInput" aria-label="binary string input" value="010101">
+          </div>
+          <div id="errorBox" class="error"></div>
+          <div id="array" class="array"></div>
+
+          <div class="heap-area">
+            <div class="box">
+              <div class="box-title">
+                <strong>heap 裡的候選</strong>
+                <span>用 Python 實作時存的是負數</span>
+              </div>
+              <div id="heapList" class="heap-list"></div>
+            </div>
+            <div class="box">
+              <div class="box-title">
+                <strong>已被 1 選走的值</strong>
+                <span>加總成 ans</span>
+              </div>
+              <div id="pickList" class="pick-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>步驟</span>
+            <strong id="stepMetric">0 / 6</strong>
+          </div>
+          <div class="metric">
+            <span>目前 i</span>
+            <strong id="iMetric">-</strong>
+          </div>
+          <div class="metric">
+            <span>heap top</span>
+            <strong id="topMetric">-</strong>
+          </div>
+          <div class="metric">
+            <span>ans</span>
+            <strong id="ansMetric">0</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>為什麼可以貪心</h2>
+          <div class="formula">
+            看到第 i 格時：<br>
+            heap = <b>前綴 nums[0..i] 中還沒被選走的值</b><br>
+            如果 s[i] == '1'：選 heap 最大值加入 ans
+          </div>
+          <p id="explainText" class="explain"></p>
+        </section>
+
+        <section class="panel">
+          <h2>變數狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>push</span>
+              <code id="pushState">-</code>
+            </div>
+            <div class="state">
+              <span>s[i]</span>
+              <code id="bitState">-</code>
+            </div>
+            <div class="state">
+              <span>pop</span>
+              <code id="popState">-</code>
+            </div>
+            <div class="state">
+              <span>heap size</span>
+              <code id="heapSizeState">0</code>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼對照</h2>
+          <pre class="code"><code><span class="line" data-code="init">heap = []</span>
+<span class="line" data-code="ans">ans = 0</span>
+<span class="line" data-code="loop">for i in range(len(nums)):</span>
+<span class="line" data-code="push">    heapq.heappush(heap, -nums[i])</span>
+<span class="line" data-code="if">    if s[i] == '1':</span>
+<span class="line" data-code="pop">        ans += -heapq.heappop(heap)</span>
+<span class="line" data-code="return">return ans</span></code></pre>
+        </section>
+
+        <section class="panel">
+          <h2>執行紀錄</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>i</th>
+                  <th>push</th>
+                  <th>s[i]</th>
+                  <th>pop</th>
+                  <th>ans</th>
+                </tr>
+              </thead>
+              <tbody id="historyRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const samples = {
+      mixed: { nums: [8, 3, 9, 2, 7, 6], s: "010101" },
+      lateOnes: { nums: [4, 10, 1, 8, 6, 12, 3], s: "0001111" },
+      already: { nums: [5, 1, 9, 4, 7], s: "10101" },
+      duplicates: { nums: [6, 6, 2, 9, 9, 1], s: "011001" }
+    };
+
+    const arrayEl = document.querySelector("#array");
+    const heapList = document.querySelector("#heapList");
+    const pickList = document.querySelector("#pickList");
+    const historyRows = document.querySelector("#historyRows");
+    const explainText = document.querySelector("#explainText");
+    const stepMetric = document.querySelector("#stepMetric");
+    const iMetric = document.querySelector("#iMetric");
+    const topMetric = document.querySelector("#topMetric");
+    const ansMetric = document.querySelector("#ansMetric");
+    const pushState = document.querySelector("#pushState");
+    const bitState = document.querySelector("#bitState");
+    const popState = document.querySelector("#popState");
+    const heapSizeState = document.querySelector("#heapSizeState");
+    const playBtn = document.querySelector("#playBtn");
+    const numsInput = document.querySelector("#numsInput");
+    const sInput = document.querySelector("#sInput");
+    const errorBox = document.querySelector("#errorBox");
+
+    let nums = samples.mixed.nums.slice();
+    let s = samples.mixed.s;
+    let step = 0;
+    let playing = false;
+    let timer = null;
+
+    function maxHeapSnapshot(values) {
+      return values.slice().sort((a, b) => b.value - a.value || a.index - b.index);
+    }
+
+    function buildSnapshots() {
+      const states = [{
+        i: -1,
+        pushed: null,
+        popped: null,
+        bit: "-",
+        heap: [],
+        picked: [],
+        ans: 0,
+        note: "尚未開始。heap 是空的，ans = 0。"
+      }];
+
+      let heap = [];
+      let picked = [];
+      let ans = 0;
+
+      for (let i = 0; i < nums.length; i += 1) {
+        const pushed = { value: nums[i], index: i };
+        heap.push(pushed);
+        let popped = null;
+
+        if (s[i] === "1") {
+          heap = maxHeapSnapshot(heap);
+          popped = heap.shift();
+          picked = picked.concat([popped]);
+          ans += popped.value;
+        }
+
+        const heapSorted = maxHeapSnapshot(heap);
+        const action = s[i] === "1"
+          ? `s[${i}] 是 1，所以從目前前綴候選中選最大值 ${popped.value}。`
+          : `s[${i}] 是 0，這一步只把 ${nums[i]} 放入候選，先不加分。`;
+
+        states.push({
+          i,
+          pushed,
+          popped,
+          bit: s[i],
+          heap: heapSorted,
+          picked: picked.slice(),
+          ans,
+          note: `處理 i = ${i}。先 push nums[${i}] = ${nums[i]}。${action}`
+        });
+      }
+
+      return states;
+    }
+
+    function currentStates() {
+      return buildSnapshots();
+    }
+
+    function fmtItem(item) {
+      return item ? `${item.value} @ P${item.index}` : "-";
+    }
+
+    function renderArray(state) {
+      arrayEl.style.setProperty("--n", nums.length);
+      arrayEl.innerHTML = "";
+      const heapIndices = new Set(state.heap.map((item) => item.index));
+      const pickedIndices = new Set(state.picked.map((item) => item.index));
+
+      nums.forEach((value, index) => {
+        const cell = document.createElement("div");
+        const classes = ["cell"];
+        if (index === state.i) classes.push("current");
+        if (heapIndices.has(index)) classes.push("available");
+        if (pickedIndices.has(index)) classes.push("chosen");
+        cell.className = classes.join(" ");
+        cell.innerHTML = `
+          <div class="idx">i = ${index}</div>
+          <div class="num">${value}</div>
+          <div class="bit ${s[index] === "1" ? "one" : ""}">${s[index]}</div>
+          <div class="tag">${pickedIndices.has(index) ? "picked" : "current"}</div>
+        `;
+        arrayEl.appendChild(cell);
+      });
+    }
+
+    function renderPills(container, items, kind) {
+      container.innerHTML = "";
+      if (items.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "pill";
+        empty.textContent = "empty";
+        container.appendChild(empty);
+        return;
+      }
+
+      items.forEach((item, idx) => {
+        const pill = document.createElement("span");
+        pill.className = `pill ${kind === "heap" && idx === 0 ? "top" : ""} ${kind === "pick" ? "pick" : ""}`;
+        pill.textContent = `${item.value} @ P${item.index}`;
+        container.appendChild(pill);
+      });
+    }
+
+    function renderHistory(states) {
+      historyRows.innerHTML = "";
+      const start = Math.max(1, step - 5);
+      for (let idx = start; idx <= step; idx += 1) {
+        const state = states[idx];
+        if (!state || state.i < 0) continue;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${state.i}</td>
+          <td>${state.pushed.value}</td>
+          <td>${state.bit}</td>
+          <td class="${state.popped ? "picked" : ""}">${state.popped ? fmtItem(state.popped) : "-"}</td>
+          <td>${state.ans}</td>
+        `;
+        historyRows.appendChild(tr);
+      }
+    }
+
+    function renderCode(state) {
+      document.querySelectorAll(".line").forEach((line) => line.classList.remove("hotline"));
+      if (state.i < 0) {
+        document.querySelector('[data-code="init"]').classList.add("hotline");
+        document.querySelector('[data-code="ans"]').classList.add("hotline");
+        return;
+      }
+      document.querySelector('[data-code="loop"]').classList.add("hotline");
+      document.querySelector('[data-code="push"]').classList.add("hotline");
+      document.querySelector('[data-code="if"]').classList.add("hotline");
+      if (state.popped) document.querySelector('[data-code="pop"]').classList.add("hotline");
+    }
+
+    function render() {
+      const states = currentStates();
+      step = Math.max(0, Math.min(step, states.length - 1));
+      const state = states[step];
+
+      renderArray(state);
+      renderPills(heapList, state.heap, "heap");
+      renderPills(pickList, state.picked, "pick");
+      renderHistory(states);
+      renderCode(state);
+
+      stepMetric.textContent = `${step} / ${nums.length}`;
+      iMetric.textContent = state.i >= 0 ? String(state.i) : "-";
+      topMetric.textContent = state.heap[0] ? String(state.heap[0].value) : "-";
+      ansMetric.textContent = String(state.ans);
+      pushState.textContent = fmtItem(state.pushed);
+      bitState.textContent = state.bit;
+      popState.textContent = fmtItem(state.popped);
+      heapSizeState.textContent = String(state.heap.length);
+      explainText.textContent = state.note + " 交換操作的效果是：每個 1 可以跨過左側的 0，因此第 t 個遇到的 1 可以從目前前綴中拿一個尚未使用的 nums 值。要讓總和最大，每次都拿最大值。";
+    }
+
+    function next() {
+      const maxStep = nums.length;
+      step = step + 1 > maxStep ? 0 : step + 1;
+      render();
+    }
+
+    function prev() {
+      step = Math.max(0, step - 1);
+      render();
+    }
+
+    function reset() {
+      stop();
+      step = 0;
+      render();
+    }
+
+    function play() {
+      if (playing) {
+        stop();
+        return;
+      }
+      playing = true;
+      playBtn.textContent = "暫停";
+      timer = window.setInterval(() => {
+        if (step >= nums.length) {
+          stop();
+          return;
+        }
+        next();
+      }, 950);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = "播放";
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function parseInputs() {
+      const parsedNums = numsInput.value
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map(Number);
+      const parsedS = sInput.value.trim();
+
+      if (parsedNums.length === 0 || parsedNums.some((value) => Number.isNaN(value))) {
+        throw new Error("nums 請輸入逗號分隔的整數，例如 8, 3, 9, 2。");
+      }
+      if (!/^[01]+$/.test(parsedS)) {
+        throw new Error("s 只能包含 0 和 1。");
+      }
+      if (parsedNums.length !== parsedS.length) {
+        throw new Error("nums 長度必須和 s 長度相同。");
+      }
+      if (parsedNums.length > 10) {
+        throw new Error("視覺化建議最多 10 個元素，避免畫面太擠。");
+      }
+
+      return { nums: parsedNums, s: parsedS };
+    }
+
+    function applyInputs() {
+      try {
+        const parsed = parseInputs();
+        nums = parsed.nums;
+        s = parsed.s;
+        errorBox.style.display = "none";
+        reset();
+      } catch (error) {
+        errorBox.textContent = error.message;
+        errorBox.style.display = "block";
+      }
+    }
+
+    document.querySelector("#nextBtn").addEventListener("click", next);
+    document.querySelector("#prevBtn").addEventListener("click", prev);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    document.querySelector("#applyBtn").addEventListener("click", applyInputs);
+    playBtn.addEventListener("click", play);
+
+    document.querySelector("#sampleSelect").addEventListener("change", (event) => {
+      const sample = samples[event.target.value];
+      nums = sample.nums.slice();
+      s = sample.s;
+      numsInput.value = nums.join(", ");
+      sInput.value = s;
+      errorBox.style.display = "none";
+      reset();
+    });
+
+    render();
+  </script>
+</body>
+</html>
