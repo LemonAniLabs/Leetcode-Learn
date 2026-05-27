@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leetcode Learn Visualizers</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --panel: #ffffff;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --blue: #2563eb;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0 40px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr minmax(280px, 420px);
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .search-panel {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    input,
+    button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 0 12px;
+    }
+
+    button {
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    .result-meta {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .filter.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      min-height: 282px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(15, 118, 110, 0.45);
+      transform: translateY(-2px);
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      line-height: 1.18;
+    }
+
+    .desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .complexity {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .complexity span {
+      min-width: 0;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--soft);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: auto;
+      padding-top: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .empty {
+      display: none;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+      box-shadow: var(--shadow);
+    }
+
+    .note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    @media (max-width: 960px) {
+      main {
+        width: min(100vw - 20px, 760px);
+        padding-top: 22px;
+      }
+
+      header {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        min-height: 240px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      main {
+        width: calc(100vw - 14px);
+      }
+
+      .search-row,
+      .complexity {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Leetcode Learn Visualizers</h1>
+        <p class="lead">互動式演算法筆記。每一頁都能逐步操作，觀察變數狀態、資料結構內容、核心不變量與 complexity。</p>
+      </div>
+      <section class="search-panel" aria-label="search visualizers">
+        <label for="searchInput">Search</label>
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="題號、名稱、topic、complexity">
+          <button id="clearBtn" type="button">清除</button>
+        </div>
+        <div id="resultMeta" class="result-meta">3 visualizers</div>
+      </section>
+    </header>
+
+    <section class="toolbar" aria-label="filters">
+      <div class="filters" id="filters"></div>
+    </section>
+
+    <section class="grid" id="cards" aria-label="visualizer list"></section>
+    <section class="empty" id="emptyState">找不到符合的 visualizer。換個題號、topic 或關鍵字試試。</section>
+
+    <p class="note">目前是零 build step 的靜態 web app：`index.html` 負責搜尋與導覽，各題頁面仍是自包含互動頁。之後若題目數量增加，可以再把資料抽成 JSON，或升級成 Vite + React。</p>
+  </main>
+
+  <script>
+    const visualizers = [
+      {
+        id: "3781",
+        title: "Maximum Score After Binary Swaps",
+        difficulty: "Medium",
+        category: "Problem",
+        topics: ["Greedy", "Heap", "Prefix"],
+        time: "O(n log n)",
+        space: "O(n)",
+        href: "./3781_maximum_score_after_binary_swaps_visualizer.html",
+        description: "用 max heap 追蹤前綴可選值，逐步顯示 push、pop、ans 與交換操作對貪心策略的影響。"
+      },
+      {
+        id: "812",
+        title: "Largest Triangle Area",
+        difficulty: "Easy",
+        category: "Problem",
+        topics: ["Geometry", "Shoelace", "Enumeration"],
+        time: "O(n^3)",
+        space: "O(1)",
+        href: "./812_largest_triangle_area_visualizer.html",
+        description: "枚舉三點並使用 shoelace formula 算面積，追蹤目前候選與最大三角形。"
+      },
+      {
+        id: "foundation-shoelace",
+        title: "Shoelace Formula",
+        difficulty: "Foundation",
+        category: "Foundation",
+        topics: ["Geometry", "Formula", "Area"],
+        time: "O(n)",
+        space: "O(1)",
+        href: "./shoelace_formula_visualizer.html",
+        description: "拖曳多邊形頂點，逐步觀察 cross product 如何累加成 signed area。"
+      }
+    ];
+
+    const searchInput = document.querySelector("#searchInput");
+    const clearBtn = document.querySelector("#clearBtn");
+    const cards = document.querySelector("#cards");
+    const filters = document.querySelector("#filters");
+    const emptyState = document.querySelector("#emptyState");
+    const resultMeta = document.querySelector("#resultMeta");
+    let activeFilter = "All";
+
+    function searchableText(item) {
+      return [
+        item.id,
+        item.title,
+        item.difficulty,
+        item.category,
+        item.description,
+        item.time,
+        item.space,
+        ...item.topics
+      ].join(" ").toLowerCase();
+    }
+
+    function filterItems() {
+      const query = searchInput.value.trim().toLowerCase();
+      return visualizers.filter((item) => {
+        const matchesFilter = activeFilter === "All" || item.topics.includes(activeFilter) || item.category === activeFilter || item.difficulty === activeFilter;
+        const matchesQuery = query === "" || searchableText(item).includes(query);
+        return matchesFilter && matchesQuery;
+      });
+    }
+
+    function renderFilters() {
+      const filterNames = ["All", ...new Set(visualizers.flatMap((item) => [item.category, item.difficulty, ...item.topics]))];
+      filters.innerHTML = "";
+      filterNames.forEach((name) => {
+        const button = document.createElement("button");
+        button.className = `filter ${name === activeFilter ? "active" : ""}`;
+        button.type = "button";
+        button.textContent = name;
+        button.addEventListener("click", () => {
+          activeFilter = name;
+          render();
+        });
+        filters.appendChild(button);
+      });
+    }
+
+    function renderCards(items) {
+      cards.innerHTML = "";
+      items.forEach((item) => {
+        const card = document.createElement("a");
+        card.className = "card";
+        card.href = item.href;
+        card.innerHTML = `
+          <div class="eyebrow">${item.difficulty} · ${item.topics.join(" · ")}</div>
+          <h2>${item.id.startsWith("foundation") ? "" : item.id + ". "}${item.title}</h2>
+          <p class="desc">${item.description}</p>
+          <div class="complexity">
+            <span>Time ${item.time}</span>
+            <span>Space ${item.space}</span>
+          </div>
+          <div class="tags">
+            ${item.topics.map((topic) => `<span class="tag">${topic}</span>`).join("")}
+          </div>
+        `;
+        cards.appendChild(card);
+      });
+    }
+
+    function render() {
+      const items = filterItems();
+      renderFilters();
+      renderCards(items);
+      resultMeta.textContent = `${items.length} / ${visualizers.length} visualizers`;
+      emptyState.style.display = items.length === 0 ? "block" : "none";
+    }
+
+    searchInput.addEventListener("input", render);
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      activeFilter = "All";
+      render();
+      searchInput.focus();
+    });
+
+    render();
+  </script>
+</body>
+</html>

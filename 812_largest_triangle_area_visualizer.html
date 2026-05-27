@@ -284,6 +284,90 @@
       color: var(--hot);
     }
 
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 0 14px;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .complexity-body p {
+      margin: 0 0 10px;
+    }
+
+    .complexity-body p:last-child {
+      margin-bottom: 0;
+    }
+
     .explain {
       margin: 12px 0 0;
       color: var(--muted);
@@ -401,7 +485,8 @@
       }
 
       .metrics,
-      .states {
+      .states,
+      .complexity-grid {
         grid-template-columns: 1fr;
         padding-left: 12px;
         padding-right: 12px;
@@ -471,6 +556,24 @@
             area(A,B,C) = |<b>x1(y2-y3) + x2(y3-y1) + x3(y1-y2)</b>| / 2
           </div>
           <p class="explain" id="explainText"></p>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(n³)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(1)</strong>
+                </div>
+              </div>
+              <p>演算法枚舉所有三點組合 `(i, j, k)`。組合數是 C(n, 3)，量級是 O(n³)。</p>
+              <p>每組三點的 shoelace 面積計算只做固定次數的乘法、加法與絕對值，所以每次是 O(1)。總時間因此是 O(n³)。</p>
+              <p>除了答案 `ans` 和迴圈索引之外，不需要額外資料結構，所以額外空間是 O(1)。</p>
+            </div>
+          </details>
         </section>
 
         <section class="panel">

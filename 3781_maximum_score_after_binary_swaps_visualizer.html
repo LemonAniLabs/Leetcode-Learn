@@ -363,6 +363,90 @@
       color: var(--hot);
     }
 
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 0 14px;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .complexity-body p {
+      margin: 0 0 10px;
+    }
+
+    .complexity-body p:last-child {
+      margin-bottom: 0;
+    }
+
     .explain {
       margin: 12px 0 0;
       color: var(--muted);
@@ -493,7 +577,8 @@
 
       .heap-area,
       .metrics,
-      .states {
+      .states,
+      .complexity-grid {
         grid-template-columns: 1fr;
       }
 
@@ -592,6 +677,24 @@
             如果 s[i] == '1'：選 heap 最大值加入 ans
           </div>
           <p id="explainText" class="explain"></p>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(n log n)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+              </div>
+              <p>每個 index 都會被掃描一次，所以外層迴圈是 O(n)。每次都會執行一次 `heappush`，成本是 O(log n)。</p>
+              <p>只有當 `s[i] == '1'` 時才會 `heappop`，最多 pop n 次，每次也是 O(log n)。因此總時間是 O(n log n)。</p>
+              <p>heap 最多會暫存所有尚未被選走的前綴元素，最壞情況大小是 n，所以額外空間是 O(n)。</p>
+            </div>
+          </details>
         </section>
 
         <section class="panel">
