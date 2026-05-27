@@ -11,6 +11,10 @@ Every algorithm visualizer page must include:
 - A collapsible `Time / Space Complexity` section.
 - A direct link from `index.html` with searchable metadata.
 
+## TODO
+
+- Flash-card design for quick answers: key algorithm concepts, data structures, and time/space complexity.
+
 ## Current Structure
 
 This project is intentionally a static web app for now:
