@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Binary Tree Traversal Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --panel: #ffffff;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --hot: #c2410c;
+      --blue: #2563eb;
+      --best: #15803d;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1380px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(600px, 1.15fr) minmax(390px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar,
+    .panel {
+      padding: 16px;
+    }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls,
+    .mode-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    button.primary,
+    button.mode.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover,
+    button.mode.active:hover {
+      border-color: var(--accent-dark);
+      background: var(--accent-dark);
+    }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    .stage {
+      padding: 16px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-height: 430px;
+      aspect-ratio: 1.34;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+    }
+
+    .edge {
+      stroke: #b6c0cf;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .edge.active {
+      stroke: var(--hot);
+      stroke-width: 4;
+    }
+
+    .node circle {
+      fill: #fff;
+      stroke: var(--ink);
+      stroke-width: 2.5;
+    }
+
+    .node.current circle {
+      fill: #fff7ed;
+      stroke: var(--hot);
+      stroke-width: 4;
+    }
+
+    .node.output circle {
+      fill: #ecfdf5;
+      stroke: var(--best);
+      stroke-width: 4;
+    }
+
+    .node.pending circle {
+      fill: #eff6ff;
+      stroke: var(--blue);
+    }
+
+    .node text {
+      fill: var(--ink);
+      font-size: 18px;
+      font-weight: 800;
+      dominant-baseline: middle;
+      text-anchor: middle;
+    }
+
+    .node-label {
+      fill: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric,
+    .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span,
+    .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong,
+    .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel {
+      border-top: 1px solid var(--line);
+    }
+
+    .formula {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .formula b {
+      color: var(--hot);
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      min-height: 42px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.current {
+      border-color: var(--hot);
+      background: #fff7ed;
+      color: var(--hot);
+    }
+
+    .pill.output {
+      border-color: var(--best);
+      background: #ecfdf5;
+      color: var(--best);
+    }
+
+    .code {
+      margin: 10px 0 0;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .line {
+      display: block;
+      padding: 0 8px;
+      border-radius: 4px;
+    }
+
+    .line.hotline {
+      background: rgba(194, 65, 12, 0.45);
+    }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 0 14px;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .complexity-body p {
+      margin: 0 0 10px;
+    }
+
+    .complexity-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 1040px) {
+      main {
+        width: min(100vw - 20px, 800px);
+        padding-top: 16px;
+      }
+
+      .header,
+      .bar {
+        display: block;
+      }
+
+      .controls,
+      .mode-row {
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      svg {
+        min-height: 340px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      main {
+        width: calc(100vw - 14px);
+      }
+
+      .bar,
+      .panel,
+      .stage {
+        padding: 12px;
+      }
+
+      .metrics,
+      .states,
+      .complexity-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>Binary Tree Traversal</h1>
+        <p class="lead">Pre-order、In-order、Post-order 都是 DFS。差別只在「visit root」這件事發生在遞迴左子樹與右子樹的哪個位置。</p>
+      </div>
+      <div class="mode-row" aria-label="traversal mode">
+        <button class="mode active" type="button" data-mode="pre">Pre-order</button>
+        <button class="mode" type="button" data-mode="in">In-order</button>
+        <button class="mode" type="button" data-mode="post">Post-order</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>DFS traversal order</h2>
+            <p class="hint">橘色是目前遞迴正在處理的節點，綠色是已經輸出到 answer 的節點，藍色代表目前 call stack 中等待返回的節點。</p>
+          </div>
+          <div class="controls">
+            <button class="icon" id="prevBtn" type="button" aria-label="上一步">‹</button>
+            <button class="primary" id="playBtn" type="button">播放</button>
+            <button class="icon" id="nextBtn" type="button" aria-label="下一步">›</button>
+            <button id="resetBtn" type="button">重設</button>
+          </div>
+        </div>
+
+        <div class="stage">
+          <svg id="canvas" viewBox="0 0 720 520" role="img" aria-label="Binary tree traversal visualization"></svg>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>步驟</span>
+            <strong id="stepMetric">0 / 0</strong>
+          </div>
+          <div class="metric">
+            <span>目前節點</span>
+            <strong id="nodeMetric">-</strong>
+          </div>
+          <div class="metric">
+            <span>動作</span>
+            <strong id="actionMetric">-</strong>
+          </div>
+          <div class="metric">
+            <span>answer</span>
+            <strong id="answerMetric">[]</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>核心差異</h2>
+          <div class="formula" id="ruleBox"></div>
+          <p class="explain" id="explainText"></p>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(h)</strong>
+                </div>
+              </div>
+              <p>三種 traversal 都會 visit 每個節點一次，所以時間複雜度是 O(n)。</p>
+              <p>遞迴 stack 的最大深度等於樹高 h，所以額外空間是 O(h)。平衡樹時 h = log n；最壞退化成鏈狀樹時 h = n。</p>
+              <p>如果把輸出 answer 也算入空間，answer 需要 O(n)。面試通常把輸出空間和額外工作空間分開討論。</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h2>狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>call stack</span>
+              <code id="stackState">[]</code>
+            </div>
+            <div class="state">
+              <span>visit timing</span>
+              <code id="timingState">Root first</code>
+            </div>
+          </div>
+          <div class="pill-list" id="stackList"></div>
+          <div class="pill-list" id="answerList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼對照</h2>
+          <pre class="code"><code><span class="line" data-code="def">def dfs(node):</span>
+<span class="line" data-code="base">    if not node: return</span>
+<span class="line" data-code="pre">    visit(node)        # pre-order</span>
+<span class="line" data-code="left">    dfs(node.left)</span>
+<span class="line" data-code="in">    visit(node)        # in-order</span>
+<span class="line" data-code="right">    dfs(node.right)</span>
+<span class="line" data-code="post">    visit(node)        # post-order</span></code></pre>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const nodes = {
+      A: { value: "A", x: 360, y: 70, left: "B", right: "C" },
+      B: { value: "B", x: 210, y: 180, left: "D", right: "E" },
+      C: { value: "C", x: 510, y: 180, left: "F", right: "G" },
+      D: { value: "D", x: 130, y: 315, left: null, right: null },
+      E: { value: "E", x: 290, y: 315, left: null, right: null },
+      F: { value: "F", x: 430, y: 315, left: null, right: null },
+      G: { value: "G", x: 590, y: 315, left: null, right: null }
+    };
+
+    const modes = {
+      pre: {
+        label: "Pre-order",
+        timing: "Root first",
+        rule: "<b>Root</b> → Left → Right",
+        visitCode: "pre",
+        note: "先輸出 root，再處理左子樹，最後處理右子樹。常用在複製樹、序列化樹，因為 root 會先出現。"
+      },
+      in: {
+        label: "In-order",
+        timing: "Root middle",
+        rule: "Left → <b>Root</b> → Right",
+        visitCode: "in",
+        note: "先處理左子樹，中間輸出 root，最後處理右子樹。對 Binary Search Tree 會得到排序後的序列。"
+      },
+      post: {
+        label: "Post-order",
+        timing: "Root last",
+        rule: "Left → Right → <b>Root</b>",
+        visitCode: "post",
+        note: "先處理左右子樹，最後才輸出 root。常用在刪除樹、計算子樹資訊，因為 child 會先完成。"
+      }
+    };
+
+    const svg = document.querySelector("#canvas");
+    const playBtn = document.querySelector("#playBtn");
+    const stepMetric = document.querySelector("#stepMetric");
+    const nodeMetric = document.querySelector("#nodeMetric");
+    const actionMetric = document.querySelector("#actionMetric");
+    const answerMetric = document.querySelector("#answerMetric");
+    const ruleBox = document.querySelector("#ruleBox");
+    const explainText = document.querySelector("#explainText");
+    const stackState = document.querySelector("#stackState");
+    const timingState = document.querySelector("#timingState");
+    const stackList = document.querySelector("#stackList");
+    const answerList = document.querySelector("#answerList");
+
+    let mode = "pre";
+    let step = 0;
+    let playing = false;
+    let timer = null;
+
+    function makeSnapshots(selectedMode) {
+      const events = [];
+      const answer = [];
+      const stack = [];
+
+      function record(action, nodeId, message, outputNow = false) {
+        events.push({
+          action,
+          nodeId,
+          message,
+          stack: stack.slice(),
+          answer: answer.slice(),
+          outputNow
+        });
+      }
+
+      function visit(nodeId) {
+        answer.push(nodeId);
+        record("visit", nodeId, `visit ${nodeId}，把 ${nodeId} 加入 answer。`, true);
+      }
+
+      function dfs(nodeId) {
+        if (!nodeId) return;
+        stack.push(nodeId);
+        record("enter", nodeId, `進入 dfs(${nodeId})。`);
+        if (selectedMode === "pre") visit(nodeId);
+        dfs(nodes[nodeId].left);
+        if (selectedMode === "in") visit(nodeId);
+        dfs(nodes[nodeId].right);
+        if (selectedMode === "post") visit(nodeId);
+        record("exit", nodeId, `離開 dfs(${nodeId})，回到上一層。`);
+        stack.pop();
+      }
+
+      events.push({
+        action: "start",
+        nodeId: null,
+        message: "準備從 root A 開始 DFS。",
+        stack: [],
+        answer: [],
+        outputNow: false
+      });
+      dfs("A");
+      events.push({
+        action: "done",
+        nodeId: null,
+        message: `Traversal 完成，answer = [${answer.join(", ")}]。`,
+        stack: [],
+        answer: answer.slice(),
+        outputNow: false
+      });
+      return events;
+    }
+
+    function node(name, attrs = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+      return el;
+    }
+
+    function clearSvg() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function drawTree(state) {
+      clearSvg();
+      const stackSet = new Set(state.stack);
+      const answerSet = new Set(state.answer);
+
+      Object.entries(nodes).forEach(([id, item]) => {
+        ["left", "right"].forEach((side) => {
+          const childId = item[side];
+          if (!childId) return;
+          const child = nodes[childId];
+          const active = state.nodeId === id || state.nodeId === childId;
+          svg.appendChild(node("line", {
+            x1: item.x,
+            y1: item.y,
+            x2: child.x,
+            y2: child.y,
+            class: `edge ${active ? "active" : ""}`
+          }));
+        });
+      });
+
+      Object.entries(nodes).forEach(([id, item]) => {
+        const group = node("g", {
+          class: [
+            "node",
+            stackSet.has(id) ? "pending" : "",
+            answerSet.has(id) ? "output" : "",
+            state.nodeId === id ? "current" : ""
+          ].join(" "),
+          transform: `translate(${item.x} ${item.y})`
+        });
+        group.appendChild(node("circle", { r: 27 }));
+        const text = node("text", { x: 0, y: 1 });
+        text.textContent = id;
+        group.appendChild(text);
+        svg.appendChild(group);
+
+        const label = node("text", {
+          x: item.x,
+          y: item.y + 48,
+          class: "node-label",
+          "text-anchor": "middle"
+        });
+        label.textContent = `node ${id}`;
+        svg.appendChild(label);
+      });
+    }
+
+    function renderPills(container, items, type, current) {
+      container.innerHTML = "";
+      if (items.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "pill";
+        empty.textContent = type === "stack" ? "stack empty" : "answer empty";
+        container.appendChild(empty);
+        return;
+      }
+      items.forEach((item) => {
+        const pill = document.createElement("span");
+        pill.className = `pill ${type === "answer" ? "output" : ""} ${item === current ? "current" : ""}`;
+        pill.textContent = item;
+        container.appendChild(pill);
+      });
+    }
+
+    function renderCode() {
+      document.querySelectorAll(".line").forEach((line) => line.classList.remove("hotline"));
+      document.querySelector('[data-code="def"]').classList.add("hotline");
+      document.querySelector('[data-code="base"]').classList.add("hotline");
+      document.querySelector('[data-code="left"]').classList.add("hotline");
+      document.querySelector('[data-code="right"]').classList.add("hotline");
+      document.querySelector(`[data-code="${modes[mode].visitCode}"]`).classList.add("hotline");
+    }
+
+    function render() {
+      const states = makeSnapshots(mode);
+      step = Math.max(0, Math.min(step, states.length - 1));
+      const state = states[step];
+      const config = modes[mode];
+
+      drawTree(state);
+      renderCode();
+      renderPills(stackList, state.stack, "stack", state.nodeId);
+      renderPills(answerList, state.answer, "answer", state.outputNow ? state.nodeId : null);
+
+      stepMetric.textContent = `${step} / ${states.length - 1}`;
+      nodeMetric.textContent = state.nodeId || "-";
+      actionMetric.textContent = state.action;
+      answerMetric.textContent = `[${state.answer.join(", ")}]`;
+      ruleBox.innerHTML = `${config.label}: ${config.rule}`;
+      explainText.textContent = `${state.message} ${config.note}`;
+      stackState.textContent = `[${state.stack.join(" -> ")}]`;
+      timingState.textContent = config.timing;
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      step = 0;
+      stop();
+      document.querySelectorAll(".mode").forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === mode);
+      });
+      render();
+    }
+
+    function next() {
+      const maxStep = makeSnapshots(mode).length - 1;
+      step = step + 1 > maxStep ? 0 : step + 1;
+      render();
+    }
+
+    function prev() {
+      step = Math.max(0, step - 1);
+      render();
+    }
+
+    function reset() {
+      stop();
+      step = 0;
+      render();
+    }
+
+    function play() {
+      if (playing) {
+        stop();
+        return;
+      }
+      playing = true;
+      playBtn.textContent = "暫停";
+      timer = window.setInterval(() => {
+        const maxStep = makeSnapshots(mode).length - 1;
+        if (step >= maxStep) {
+          stop();
+          return;
+        }
+        next();
+      }, 850);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = "播放";
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    document.querySelector("#nextBtn").addEventListener("click", next);
+    document.querySelector("#prevBtn").addEventListener("click", prev);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    playBtn.addEventListener("click", play);
+    document.querySelectorAll(".mode").forEach((button) => {
+      button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+
+    render();
+  </script>
+</body>
+</html>
