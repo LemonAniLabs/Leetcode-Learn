@@ -168,6 +168,26 @@
       gap: 14px;
     }
 
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 18px 0 10px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
     .card {
       display: flex;
       flex-direction: column;
@@ -185,6 +205,64 @@
     .card:hover {
       border-color: rgba(15, 118, 110, 0.45);
       transform: translateY(-2px);
+    }
+
+    .tools-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .tool-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 0.8fr) minmax(260px, 1.2fr) auto;
+      gap: 14px;
+      align-items: center;
+      min-height: 82px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      color: inherit;
+      text-decoration: none;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .tool-row:hover {
+      border-color: rgba(15, 118, 110, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .tool-name {
+      min-width: 0;
+    }
+
+    .tool-name strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .tool-name span,
+    .tool-desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .tool-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
     }
 
     .eyebrow {
@@ -287,6 +365,15 @@
         grid-template-columns: 1fr;
       }
 
+      .tool-row {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .tool-action {
+        justify-self: start;
+      }
+
       .card {
         min-height: 240px;
       }
@@ -321,7 +408,7 @@
           <input id="searchInput" type="search" placeholder="題號、名稱、topic、complexity">
           <button id="clearBtn" type="button">清除</button>
         </div>
-        <div id="resultMeta" class="result-meta">3 visualizers</div>
+        <div id="resultMeta" class="result-meta">0 items</div>
       </section>
     </header>
 
@@ -329,7 +416,22 @@
       <div class="filters" id="filters"></div>
     </section>
 
-    <section class="grid" id="cards" aria-label="visualizer list"></section>
+    <section id="toolsSection">
+      <div class="section-title">
+        <h2>Tools</h2>
+        <span id="toolsCount">0 tools</span>
+      </div>
+      <div class="tools-list" id="tools" aria-label="tool list"></div>
+    </section>
+
+    <section id="visualizersSection">
+      <div class="section-title">
+        <h2>Algorithm Visualizers</h2>
+        <span id="visualizersCount">0 visualizers</span>
+      </div>
+      <div class="grid" id="cards" aria-label="visualizer list"></div>
+    </section>
+
     <section class="empty" id="emptyState">找不到符合的 visualizer。換個題號、topic 或關鍵字試試。</section>
 
     <p class="note">目前是零 build step 的靜態 web app：`index.html` 負責搜尋與導覽，各題頁面仍是自包含互動頁。之後若題目數量增加，可以再把資料抽成 JSON，或升級成 Vite + React。</p>
@@ -400,6 +502,11 @@
     const searchInput = document.querySelector("#searchInput");
     const clearBtn = document.querySelector("#clearBtn");
     const cards = document.querySelector("#cards");
+    const tools = document.querySelector("#tools");
+    const toolsSection = document.querySelector("#toolsSection");
+    const visualizersSection = document.querySelector("#visualizersSection");
+    const toolsCount = document.querySelector("#toolsCount");
+    const visualizersCount = document.querySelector("#visualizersCount");
     const filters = document.querySelector("#filters");
     const emptyState = document.querySelector("#emptyState");
     const resultMeta = document.querySelector("#resultMeta");
@@ -466,11 +573,36 @@
       });
     }
 
+    function renderTools(items) {
+      tools.innerHTML = "";
+      items.forEach((item) => {
+        const row = document.createElement("a");
+        row.className = "tool-row";
+        row.href = item.href;
+        row.innerHTML = `
+          <div class="tool-name">
+            <strong>${item.title}</strong>
+            <span>${item.topics.join(" · ")}</span>
+          </div>
+          <div class="tool-desc">${item.description}</div>
+          <div class="tool-action">Open tool</div>
+        `;
+        tools.appendChild(row);
+      });
+    }
+
     function render() {
       const items = filterItems();
+      const toolItems = items.filter((item) => item.category === "Tool");
+      const visualizerItems = items.filter((item) => item.category !== "Tool");
       renderFilters();
-      renderCards(items);
-      resultMeta.textContent = `${items.length} / ${visualizers.length} visualizers`;
+      renderTools(toolItems);
+      renderCards(visualizerItems);
+      toolsSection.style.display = toolItems.length === 0 ? "none" : "block";
+      visualizersSection.style.display = visualizerItems.length === 0 ? "none" : "block";
+      toolsCount.textContent = `${toolItems.length} tools`;
+      visualizersCount.textContent = `${visualizerItems.length} visualizers`;
+      resultMeta.textContent = `${items.length} / ${visualizers.length} items`;
       emptyState.style.display = items.length === 0 ? "block" : "none";
     }
 
