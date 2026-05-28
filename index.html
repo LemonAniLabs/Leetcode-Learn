@@ -65,7 +65,7 @@
       display: inline-flex;
       align-items: center;
       min-height: 30px;
-      margin-top: 14px;
+      margin-top: 10px;
       padding: 0 10px;
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -314,7 +314,6 @@
       <div>
         <h1>Leetcode Learn Visualizers</h1>
         <p class="lead">互動式演算法筆記。每一頁都能逐步操作，觀察變數狀態、資料結構內容、核心不變量與 complexity。</p>
-        <div class="version-badge" id="versionBadge">commit: loading</div>
       </div>
       <section class="search-panel" aria-label="search visualizers">
         <label for="searchInput">Search</label>
@@ -334,6 +333,9 @@
     <section class="empty" id="emptyState">找不到符合的 visualizer。換個題號、topic 或關鍵字試試。</section>
 
     <p class="note">目前是零 build step 的靜態 web app：`index.html` 負責搜尋與導覽，各題頁面仍是自包含互動頁。之後若題目數量增加，可以再把資料抽成 JSON，或升級成 Vite + React。</p>
+    <footer>
+      <div class="version-badge" id="versionBadge">commit: loading</div>
+    </footer>
   </main>
 
   <script>
