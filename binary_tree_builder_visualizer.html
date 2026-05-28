@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Binary Tree Builder Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --hot: #c2410c;
+      --blue: #2563eb;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1380px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(620px, 1.2fr) minmax(360px, 0.8fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar,
+    .panel,
+    .stage {
+      padding: 16px;
+    }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls,
+    .samples {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button,
+    textarea,
+    select {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+    }
+
+    button,
+    select {
+      min-height: 38px;
+      padding: 0 12px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:hover,
+    select:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: var(--accent-dark);
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 82px;
+      resize: vertical;
+      padding: 12px;
+      line-height: 1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .error {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      background: #fef2f2;
+      color: #991b1b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .canvas-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+    }
+
+    svg {
+      display: block;
+      min-width: 100%;
+      min-height: 520px;
+    }
+
+    .edge {
+      stroke: #111827;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+    }
+
+    .node circle {
+      fill: #e8f2ff;
+      stroke: #111827;
+      stroke-width: 2.4;
+    }
+
+    .node.root circle {
+      fill: #dbeafe;
+      stroke: var(--blue);
+      stroke-width: 3.2;
+    }
+
+    .node text {
+      fill: var(--ink);
+      font-size: 18px;
+      font-weight: 800;
+      dominant-baseline: middle;
+      text-anchor: middle;
+    }
+
+    .index-label {
+      fill: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-anchor: middle;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric,
+    .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span,
+    .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong,
+    .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel {
+      border-top: 1px solid var(--line);
+    }
+
+    .formula {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .formula b {
+      color: var(--hot);
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 0 14px;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 1040px) {
+      main {
+        width: min(100vw - 20px, 800px);
+        padding-top: 16px;
+      }
+
+      .header,
+      .bar {
+        display: block;
+      }
+
+      .controls,
+      .samples {
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      main {
+        width: calc(100vw - 14px);
+      }
+
+      .bar,
+      .panel,
+      .stage {
+        padding: 12px;
+      }
+
+      .metrics,
+      .states,
+      .complexity-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>Binary Tree Builder</h1>
+        <p class="lead">貼上 LeetCode level-order array，包含 `null`，就能產生二元樹圖。適合搭配 traversal、path sum、LCA、BST 等題目快速看懂結構。</p>
+      </div>
+      <div class="samples">
+        <select id="sampleSelect" aria-label="選擇範例">
+          <option value="pathSum">Path Sum 範例</option>
+          <option value="complete">Complete Tree</option>
+          <option value="skewed">Skewed Tree</option>
+          <option value="sparse">Sparse Tree</option>
+        </select>
+        <button class="primary" id="renderBtn" type="button">產生樹</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>Level-order input</h2>
+            <p class="hint">格式可用 `[5,4,8,11,null,13,4,7,2,null,null,5,1]`，也可省略中括號。`null`、`None`、`nil` 都會被視為空節點。</p>
+          </div>
+          <div class="controls">
+            <button id="fitBtn" type="button">重畫置中</button>
+          </div>
+        </div>
+
+        <div class="stage">
+          <textarea id="treeInput">[5,4,8,11,null,13,4,7,2,null,null,5,1]</textarea>
+          <div id="errorBox" class="error"></div>
+          <div class="canvas-wrap" id="canvasWrap">
+            <svg id="canvas" viewBox="0 0 920 560" role="img" aria-label="Binary tree visualization"></svg>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>節點數</span>
+            <strong id="nodeCountMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>高度</span>
+            <strong id="heightMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>root</span>
+            <strong id="rootMetric">-</strong>
+          </div>
+          <div class="metric">
+            <span>array 長度</span>
+            <strong id="arrayLengthMetric">0</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>LeetCode array 如何變成樹</h2>
+          <div class="formula">
+            對節點 queue 做 BFS：<br>
+            每取出一個非空 parent，就依序讀下一個值當 <b>left</b>，再下一個值當 <b>right</b>。
+          </div>
+          <p class="explain">這和 LeetCode 題目描述中的 binary tree serialization 一致。`null` 代表該位置沒有節點，因此不會繼續產生它的 children。</p>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+              </div>
+              <p>解析 level-order array 時，每個輸入 token 最多處理一次，所以時間是 O(n)。</p>
+              <p>需要建立節點資料、queue 與座標資訊，最壞情況和節點數成正比，所以空間是 O(n)。</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h2>目前樹狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>level order</span>
+              <code id="levelState">[]</code>
+            </div>
+            <div class="state">
+              <span>leaf nodes</span>
+              <code id="leafState">[]</code>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const samples = {
+      pathSum: "[5,4,8,11,null,13,4,7,2,null,null,5,1]",
+      complete: "[1,2,3,4,5,6,7]",
+      skewed: "[1,null,2,null,3,null,4]",
+      sparse: "[10,5,15,3,7,null,18,null,4]"
+    };
+
+    const treeInput = document.querySelector("#treeInput");
+    const sampleSelect = document.querySelector("#sampleSelect");
+    const errorBox = document.querySelector("#errorBox");
+    const svg = document.querySelector("#canvas");
+    const nodeCountMetric = document.querySelector("#nodeCountMetric");
+    const heightMetric = document.querySelector("#heightMetric");
+    const rootMetric = document.querySelector("#rootMetric");
+    const arrayLengthMetric = document.querySelector("#arrayLengthMetric");
+    const levelState = document.querySelector("#levelState");
+    const leafState = document.querySelector("#leafState");
+
+    function parseInput(text) {
+      const trimmed = text.trim().replace(/^\[/, "").replace(/\]$/, "");
+      if (!trimmed) return [];
+      return trimmed.split(",").map((raw) => {
+        const token = raw.trim();
+        if (/^(null|none|nil)$/i.test(token)) return null;
+        if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
+        if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+          return token.slice(1, -1);
+        }
+        return token;
+      });
+    }
+
+    function buildTree(values) {
+      if (values.length === 0 || values[0] === null) return { nodes: [], root: null };
+
+      let id = 0;
+      const root = { id: id++, value: values[0], left: null, right: null, depth: 0 };
+      const nodes = [root];
+      const queue = [root];
+      let index = 1;
+
+      while (queue.length > 0 && index < values.length) {
+        const parent = queue.shift();
+        const leftValue = values[index++];
+        if (leftValue !== undefined && leftValue !== null) {
+          const left = { id: id++, value: leftValue, left: null, right: null, depth: parent.depth + 1 };
+          parent.left = left;
+          nodes.push(left);
+          queue.push(left);
+        }
+
+        const rightValue = values[index++];
+        if (rightValue !== undefined && rightValue !== null) {
+          const right = { id: id++, value: rightValue, left: null, right: null, depth: parent.depth + 1 };
+          parent.right = right;
+          nodes.push(right);
+          queue.push(right);
+        }
+      }
+
+      return { nodes, root };
+    }
+
+    function assignPositions(root) {
+      let order = 0;
+      const gapX = 82;
+      const gapY = 118;
+      const marginX = 70;
+      const marginY = 56;
+
+      function dfs(node) {
+        if (!node) return;
+        dfs(node.left);
+        node.x = marginX + order * gapX;
+        node.y = marginY + node.depth * gapY;
+        order += 1;
+        dfs(node.right);
+      }
+
+      dfs(root);
+      return {
+        width: Math.max(920, marginX * 2 + Math.max(1, order) * gapX),
+        height: Math.max(560, marginY * 2 + (treeHeight(root) + 1) * gapY)
+      };
+    }
+
+    function treeHeight(root) {
+      if (!root) return 0;
+      return 1 + Math.max(treeHeight(root.left), treeHeight(root.right));
+    }
+
+    function leaves(nodes) {
+      return nodes.filter((node) => !node.left && !node.right).map((node) => String(node.value));
+    }
+
+    function levelOrder(root) {
+      if (!root) return [];
+      const out = [];
+      const queue = [root];
+      while (queue.length > 0) {
+        const node = queue.shift();
+        out.push(String(node.value));
+        if (node.left) queue.push(node.left);
+        if (node.right) queue.push(node.right);
+      }
+      return out;
+    }
+
+    function node(name, attrs = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+      return el;
+    }
+
+    function clearSvg() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function draw(root, nodes, bounds) {
+      clearSvg();
+      svg.setAttribute("viewBox", `0 0 ${bounds.width} ${bounds.height}`);
+      svg.style.width = `${bounds.width}px`;
+      svg.style.height = `${bounds.height}px`;
+
+      nodes.forEach((item) => {
+        [item.left, item.right].forEach((child) => {
+          if (!child) return;
+          svg.appendChild(node("line", {
+            x1: item.x,
+            y1: item.y,
+            x2: child.x,
+            y2: child.y,
+            class: "edge"
+          }));
+        });
+      });
+
+      nodes.forEach((item) => {
+        const group = node("g", {
+          class: `node ${item === root ? "root" : ""}`,
+          transform: `translate(${item.x} ${item.y})`
+        });
+        group.appendChild(node("circle", { r: 26 }));
+        const text = node("text", { x: 0, y: 1 });
+        text.textContent = String(item.value);
+        group.appendChild(text);
+        svg.appendChild(group);
+
+        const label = node("text", {
+          x: item.x,
+          y: item.y + 44,
+          class: "index-label"
+        });
+        label.textContent = `id ${item.id}`;
+        svg.appendChild(label);
+      });
+    }
+
+    function renderTree() {
+      try {
+        const values = parseInput(treeInput.value);
+        const { nodes, root } = buildTree(values);
+        const bounds = assignPositions(root);
+        draw(root, nodes, bounds);
+
+        errorBox.style.display = "none";
+        nodeCountMetric.textContent = String(nodes.length);
+        heightMetric.textContent = String(treeHeight(root));
+        rootMetric.textContent = root ? String(root.value) : "-";
+        arrayLengthMetric.textContent = String(values.length);
+        levelState.textContent = `[${levelOrder(root).join(", ")}]`;
+        leafState.textContent = `[${leaves(nodes).join(", ")}]`;
+      } catch (error) {
+        errorBox.textContent = error.message;
+        errorBox.style.display = "block";
+      }
+    }
+
+    document.querySelector("#renderBtn").addEventListener("click", renderTree);
+    document.querySelector("#fitBtn").addEventListener("click", renderTree);
+    sampleSelect.addEventListener("change", () => {
+      treeInput.value = samples[sampleSelect.value];
+      renderTree();
+    });
+
+    renderTree();
+  </script>
+</body>
+</html>
