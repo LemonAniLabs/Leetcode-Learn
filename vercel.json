@@ -1,4 +1,6 @@
 {
+  "buildCommand": "node scripts/write-version.mjs",
   "cleanUrls": true,
+  "outputDirectory": ".",
   "trailingSlash": false
 }

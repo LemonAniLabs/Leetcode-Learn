@@ -61,6 +61,21 @@
       line-height: 1.6;
     }
 
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      margin-top: 14px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
     .search-panel {
       padding: 14px;
       border: 1px solid var(--line);
@@ -299,6 +314,7 @@
       <div>
         <h1>Leetcode Learn Visualizers</h1>
         <p class="lead">互動式演算法筆記。每一頁都能逐步操作，觀察變數狀態、資料結構內容、核心不變量與 complexity。</p>
+        <div class="version-badge" id="versionBadge">commit: loading</div>
       </div>
       <section class="search-panel" aria-label="search visualizers">
         <label for="searchInput">Search</label>
@@ -374,6 +390,7 @@
     const filters = document.querySelector("#filters");
     const emptyState = document.querySelector("#emptyState");
     const resultMeta = document.querySelector("#resultMeta");
+    const versionBadge = document.querySelector("#versionBadge");
     let activeFilter = "All";
 
     function searchableText(item) {
@@ -452,7 +469,19 @@
       searchInput.focus();
     });
 
+    async function renderVersion() {
+      try {
+        const response = await fetch("./version.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("version unavailable");
+        const version = await response.json();
+        versionBadge.textContent = `commit: ${version.shortCommit || "unknown"}`;
+      } catch {
+        versionBadge.textContent = "commit: local";
+      }
+    }
+
     render();
+    renderVersion();
   </script>
 </body>
 </html>
