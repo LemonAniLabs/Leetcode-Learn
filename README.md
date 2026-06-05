@@ -8,6 +8,7 @@ Every algorithm visualizer page must include:
 
 - Step controls for moving through the algorithm state.
 - A visible explanation of the main invariant or decision rule.
+- A visible pitfalls / details section for commonly missed implementation issues.
 - A collapsible `Time / Space Complexity` section.
 - A direct link from `index.html` with searchable metadata.
 

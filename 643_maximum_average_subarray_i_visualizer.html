@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>643. Maximum Average Subarray I Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --hot: #c2410c;
+      --best: #15803d;
+      --blue: #2563eb;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1340px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(620px, 1.15fr) minmax(390px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar, .panel, .stage { padding: 16px; }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover { background: var(--accent-dark); }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    .array {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(72px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .cell {
+      position: relative;
+      min-height: 112px;
+      padding: 12px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .cell.in-window {
+      border-color: rgba(37, 99, 235, 0.45);
+      background: #eff6ff;
+    }
+
+    .cell.add {
+      border-color: var(--best);
+      background: #ecfdf5;
+    }
+
+    .cell.remove {
+      border-color: var(--hot);
+      background: #fff7ed;
+    }
+
+    .idx {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .marker {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 10px;
+      min-height: 24px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 24px;
+    }
+
+    .cell.add .marker {
+      background: #dcfce7;
+      color: var(--best);
+    }
+
+    .cell.remove .marker {
+      background: #fed7aa;
+      color: var(--hot);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric, .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span, .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong, .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel { border-top: 1px solid var(--line); }
+
+    .formula, .pitfall {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .formula b, .pitfall b { color: var(--hot); }
+
+    .pitfall {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      font-family: inherit;
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .code {
+      margin: 10px 0 0;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .line {
+      display: block;
+      padding: 0 8px;
+      border-radius: 4px;
+    }
+
+    .line.hotline { background: rgba(194, 65, 12, 0.45); }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 46px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--accent); font-size: 20px; }
+    details[open] summary { border-bottom: 1px solid var(--line); background: var(--soft); }
+    details[open] summary::after { content: "-"; }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 1040px) {
+      main { width: min(100vw - 20px, 800px); padding-top: 16px; }
+      .header, .bar { display: block; }
+      .controls { justify-content: flex-start; margin-top: 12px; }
+      .layout { grid-template-columns: 1fr; }
+      .array { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 600px) {
+      main { width: calc(100vw - 14px); }
+      .bar, .panel, .stage { padding: 12px; }
+      .array, .metrics, .states, .complexity-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>643. Maximum Average Subarray I</h1>
+        <p class="lead">固定長度 k 的 subarray 要最大 average，等價於找最大 window sum。每次滑動只加右邊新元素、移除左邊舊元素。</p>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>Fixed-size Sliding Window</h2>
+            <p class="hint">藍色是目前長度 k 的 window，綠色是新加入元素，橘色是滑動時移除的元素。</p>
+          </div>
+          <div class="controls">
+            <button class="icon" id="prevBtn" type="button" aria-label="上一步">‹</button>
+            <button class="primary" id="playBtn" type="button">播放</button>
+            <button class="icon" id="nextBtn" type="button" aria-label="下一步">›</button>
+            <button id="resetBtn" type="button">重設</button>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="array" id="array"></div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>步驟</span>
+            <strong id="stepMetric">0 / 0</strong>
+          </div>
+          <div class="metric">
+            <span>window sum</span>
+            <strong id="sumMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>max sum</span>
+            <strong id="maxMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>answer</span>
+            <strong id="answerMetric">0</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>核心不變量</h2>
+          <div class="formula">
+            window_sum = sum(nums[left..right])<br>
+            right - left + 1 = k<br>
+            max_average = <b>max_sum / k</b>
+          </div>
+          <p class="explain" id="explainText"></p>
+          <div class="pitfall">
+            <b>容易漏掉：</b>不要把 `max_sum` 初始化成 0，因為 nums 可能全部是負數。應該先用 `sum(nums[:k])` 當第一個 window。
+          </div>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(1)</strong>
+                </div>
+              </div>
+              <p>每個元素最多被加入 window 一次、移除一次，所以時間是 O(n)。</p>
+              <p>只需要 `window_sum`、`max_sum` 和迴圈索引，不需要額外資料結構，所以空間是 O(1)。</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h2>狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>window</span>
+              <code id="windowState">[]</code>
+            </div>
+            <div class="state">
+              <span>operation</span>
+              <code id="operationState">init</code>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼對照</h2>
+          <pre class="code"><code><span class="line" data-code="init">window_sum = sum(nums[:k])</span>
+<span class="line" data-code="max">max_sum = window_sum</span>
+<span class="line" data-code="loop">for i in range(k, len(nums)):</span>
+<span class="line" data-code="add">    window_sum += nums[i]</span>
+<span class="line" data-code="remove">    window_sum -= nums[i - k]</span>
+<span class="line" data-code="update">    max_sum = max(max_sum, window_sum)</span>
+<span class="line" data-code="return">return max_sum / k</span></code></pre>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const nums = [1, 12, -5, -6, 50, 3];
+    const k = 4;
+    const arrayEl = document.querySelector("#array");
+    const playBtn = document.querySelector("#playBtn");
+    const stepMetric = document.querySelector("#stepMetric");
+    const sumMetric = document.querySelector("#sumMetric");
+    const maxMetric = document.querySelector("#maxMetric");
+    const answerMetric = document.querySelector("#answerMetric");
+    const explainText = document.querySelector("#explainText");
+    const windowState = document.querySelector("#windowState");
+    const operationState = document.querySelector("#operationState");
+    let step = 0;
+    let playing = false;
+    let timer = null;
+
+    function snapshots() {
+      const states = [];
+      let windowSum = nums.slice(0, k).reduce((sum, value) => sum + value, 0);
+      let maxSum = windowSum;
+      states.push({
+        left: 0,
+        right: k - 1,
+        add: null,
+        remove: null,
+        windowSum,
+        maxSum,
+        code: "init",
+        operation: "init first k elements",
+        message: `先計算第一個長度 k 的 window：[${nums.slice(0, k).join(", ")}]，window_sum = ${windowSum}。`
+      });
+      states.push({
+        left: 0,
+        right: k - 1,
+        add: null,
+        remove: null,
+        windowSum,
+        maxSum,
+        code: "max",
+        operation: "max_sum = window_sum",
+        message: `初始化 max_sum = ${maxSum}。不能用 0，因為 nums 可能全部是負數。`
+      });
+
+      for (let i = k; i < nums.length; i += 1) {
+        const removeIndex = i - k;
+        windowSum += nums[i];
+        windowSum -= nums[removeIndex];
+        maxSum = Math.max(maxSum, windowSum);
+        states.push({
+          left: removeIndex + 1,
+          right: i,
+          add: i,
+          remove: removeIndex,
+          windowSum,
+          maxSum,
+          code: "update",
+          operation: `+ nums[${i}], - nums[${removeIndex}]`,
+          message: `window 往右滑：加入 nums[${i}] = ${nums[i]}，移除 nums[${removeIndex}] = ${nums[removeIndex]}，新的 window_sum = ${windowSum}。`
+        });
+      }
+
+      states.push({
+        left: nums.length - k,
+        right: nums.length - 1,
+        add: null,
+        remove: null,
+        windowSum,
+        maxSum,
+        code: "return",
+        operation: "return max_sum / k",
+        message: `最大 sum 是 ${maxSum}。因為 k 固定，最大 average = ${maxSum} / ${k} = ${maxSum / k}。`
+      });
+      return states;
+    }
+
+    function renderArray(state) {
+      arrayEl.innerHTML = "";
+      nums.forEach((value, index) => {
+        const cell = document.createElement("div");
+        const classes = ["cell"];
+        if (index >= state.left && index <= state.right) classes.push("in-window");
+        if (index === state.add) classes.push("add");
+        if (index === state.remove) classes.push("remove");
+        cell.className = classes.join(" ");
+        cell.innerHTML = `
+          <div class="idx">i = ${index}</div>
+          <div class="value">${value}</div>
+          <div class="marker">${index === state.add ? "add" : index === state.remove ? "remove" : index >= state.left && index <= state.right ? "window" : ""}</div>
+        `;
+        arrayEl.appendChild(cell);
+      });
+    }
+
+    function renderCode(code) {
+      document.querySelectorAll(".line").forEach((line) => line.classList.remove("hotline"));
+      const current = document.querySelector(`[data-code="${code}"]`);
+      if (current) current.classList.add("hotline");
+      if (code === "update") {
+        document.querySelector('[data-code="loop"]').classList.add("hotline");
+        document.querySelector('[data-code="add"]').classList.add("hotline");
+        document.querySelector('[data-code="remove"]').classList.add("hotline");
+      }
+    }
+
+    function render() {
+      const states = snapshots();
+      step = Math.max(0, Math.min(step, states.length - 1));
+      const state = states[step];
+      renderArray(state);
+      renderCode(state.code);
+      stepMetric.textContent = `${step} / ${states.length - 1}`;
+      sumMetric.textContent = String(state.windowSum);
+      maxMetric.textContent = String(state.maxSum);
+      answerMetric.textContent = String(state.maxSum / k);
+      windowState.textContent = `[${nums.slice(state.left, state.right + 1).join(", ")}]`;
+      operationState.textContent = state.operation;
+      explainText.textContent = state.message;
+    }
+
+    function next() {
+      const maxStep = snapshots().length - 1;
+      step = step + 1 > maxStep ? 0 : step + 1;
+      render();
+    }
+
+    function prev() {
+      step = Math.max(0, step - 1);
+      render();
+    }
+
+    function reset() {
+      stop();
+      step = 0;
+      render();
+    }
+
+    function play() {
+      if (playing) {
+        stop();
+        return;
+      }
+      playing = true;
+      playBtn.textContent = "暫停";
+      timer = window.setInterval(() => {
+        if (step >= snapshots().length - 1) {
+          stop();
+          return;
+        }
+        next();
+      }, 950);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = "播放";
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    document.querySelector("#nextBtn").addEventListener("click", next);
+    document.querySelector("#prevBtn").addEventListener("click", prev);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    playBtn.addEventListener("click", play);
+    render();
+  </script>
+</body>
+</html>

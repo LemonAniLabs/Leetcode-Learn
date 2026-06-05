@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>113. Path Sum II Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --hot: #c2410c;
+      --blue: #2563eb;
+      --best: #15803d;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1380px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 880px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(620px, 1.15fr) minmax(390px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar, .panel, .stage { padding: 16px; }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover { background: var(--accent-dark); }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-height: 430px;
+      aspect-ratio: 1.34;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+    }
+
+    .edge {
+      stroke: #b6c0cf;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .edge.active {
+      stroke: var(--hot);
+      stroke-width: 4;
+    }
+
+    .node circle {
+      fill: #fff;
+      stroke: var(--ink);
+      stroke-width: 2.5;
+    }
+
+    .node.path circle {
+      fill: #eff6ff;
+      stroke: var(--blue);
+      stroke-width: 3;
+    }
+
+    .node.current circle {
+      fill: #fff7ed;
+      stroke: var(--hot);
+      stroke-width: 4;
+    }
+
+    .node.success circle {
+      fill: #ecfdf5;
+      stroke: var(--best);
+      stroke-width: 4;
+    }
+
+    .node text {
+      fill: var(--ink);
+      font-size: 17px;
+      font-weight: 800;
+      dominant-baseline: middle;
+      text-anchor: middle;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric, .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span, .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong, .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel { border-top: 1px solid var(--line); }
+
+    .formula, .pitfall {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .formula b, .pitfall b { color: var(--hot); }
+
+    .pitfall {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      font-family: inherit;
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      min-height: 42px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.path {
+      border-color: var(--blue);
+      background: #eff6ff;
+      color: var(--blue);
+    }
+
+    .pill.ans {
+      border-color: var(--best);
+      background: #ecfdf5;
+      color: var(--best);
+    }
+
+    .code {
+      margin: 10px 0 0;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .line {
+      display: block;
+      padding: 0 8px;
+      border-radius: 4px;
+    }
+
+    .line.hotline { background: rgba(194, 65, 12, 0.45); }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 0 14px;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    details[open] summary::after { content: "-"; }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 1040px) {
+      main {
+        width: min(100vw - 20px, 800px);
+        padding-top: 16px;
+      }
+
+      .header, .bar { display: block; }
+
+      .controls {
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+
+      .layout { grid-template-columns: 1fr; }
+      svg { min-height: 340px; }
+    }
+
+    @media (max-width: 600px) {
+      main { width: calc(100vw - 14px); }
+      .bar, .panel, .stage { padding: 12px; }
+      .metrics, .states, .complexity-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>113. Path Sum II</h1>
+        <p class="lead">用 DFS backtracking 找所有 root-to-leaf path。每次進入節點就加入 `path`，離開節點前一定要 `path.pop()` 還原狀態。</p>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>DFS path tracking</h2>
+            <p class="hint">藍色是目前 path，橘色是正在處理的節點，綠色代表找到符合 targetSum 的 root-to-leaf path。</p>
+          </div>
+          <div class="controls">
+            <button class="icon" id="prevBtn" type="button" aria-label="上一步">‹</button>
+            <button class="primary" id="playBtn" type="button">播放</button>
+            <button class="icon" id="nextBtn" type="button" aria-label="下一步">›</button>
+            <button id="resetBtn" type="button">重設</button>
+          </div>
+        </div>
+
+        <div class="stage">
+          <svg id="canvas" viewBox="0 0 760 520" role="img" aria-label="Path Sum II binary tree visualization"></svg>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>步驟</span>
+            <strong id="stepMetric">0 / 0</strong>
+          </div>
+          <div class="metric">
+            <span>目前節點</span>
+            <strong id="nodeMetric">-</strong>
+          </div>
+          <div class="metric">
+            <span>curSum / target</span>
+            <strong id="sumMetric">0 / 22</strong>
+          </div>
+          <div class="metric">
+            <span>找到 paths</span>
+            <strong id="ansMetric">0</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>核心不變量</h2>
+          <div class="formula">
+            path = root 到目前 node 的路徑<br>
+            curSum = sum(path)<br>
+            只有 <b>leaf</b> 且 curSum == targetSum 才加入 ans
+          </div>
+          <p class="explain" id="explainText"></p>
+          <div class="pitfall">
+            <b>容易漏掉：</b>找到答案時要用 `ans.append(path[:])`。如果直接 append `path`，後面 backtracking 的 `path.pop()` 會修改同一個 list reference，最後答案會壞掉。
+          </div>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(h)</strong>
+                </div>
+              </div>
+              <p>DFS 會拜訪每個節點一次，所以 traversal 本身是 O(n)。找到答案時複製 path 需要 O(h)，總輸出成本取決於答案數量。</p>
+              <p>遞迴 stack 和目前 path 最多都是樹高 h，所以額外工作空間是 O(h)。如果把輸出 ans 算進去，最壞需要 O(number_of_paths * h)。</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h2>狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>path</span>
+              <code id="pathState">[]</code>
+            </div>
+            <div class="state">
+              <span>ans</span>
+              <code id="ansState">[]</code>
+            </div>
+          </div>
+          <div class="pill-list" id="pathList"></div>
+          <div class="pill-list" id="ansList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼對照</h2>
+          <pre class="code"><code><span class="line" data-code="base">if not node: return</span>
+<span class="line" data-code="push">path.append(node.val)</span>
+<span class="line" data-code="sum">curSum += node.val</span>
+<span class="line" data-code="leaf">if not node.left and not node.right:</span>
+<span class="line" data-code="copy">    ans.append(path[:])</span>
+<span class="line" data-code="left">dfs(node.left, curSum)</span>
+<span class="line" data-code="right">dfs(node.right, curSum)</span>
+<span class="line" data-code="pop">path.pop()</span></code></pre>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const targetSum = 22;
+    const nodes = {
+      A: { value: 5, x: 380, y: 58, left: "B", right: "C" },
+      B: { value: 4, x: 230, y: 155, left: "D", right: null },
+      C: { value: 8, x: 530, y: 155, left: "E", right: "F" },
+      D: { value: 11, x: 145, y: 260, left: "G", right: "H" },
+      E: { value: 13, x: 455, y: 260, left: null, right: null },
+      F: { value: 4, x: 610, y: 260, left: "I", right: "J" },
+      G: { value: 7, x: 80, y: 382, left: null, right: null },
+      H: { value: 2, x: 210, y: 382, left: null, right: null },
+      I: { value: 5, x: 545, y: 382, left: null, right: null },
+      J: { value: 1, x: 680, y: 382, left: null, right: null }
+    };
+
+    const svg = document.querySelector("#canvas");
+    const playBtn = document.querySelector("#playBtn");
+    const stepMetric = document.querySelector("#stepMetric");
+    const nodeMetric = document.querySelector("#nodeMetric");
+    const sumMetric = document.querySelector("#sumMetric");
+    const ansMetric = document.querySelector("#ansMetric");
+    const explainText = document.querySelector("#explainText");
+    const pathState = document.querySelector("#pathState");
+    const ansState = document.querySelector("#ansState");
+    const pathList = document.querySelector("#pathList");
+    const ansList = document.querySelector("#ansList");
+
+    let step = 0;
+    let playing = false;
+    let timer = null;
+
+    function makeSnapshots() {
+      const states = [];
+      const path = [];
+      const pathIds = [];
+      const ans = [];
+
+      function record(action, nodeId, curSum, message, code) {
+        states.push({
+          action,
+          nodeId,
+          curSum,
+          path: path.slice(),
+          pathIds: pathIds.slice(),
+          ans: ans.map((item) => item.slice()),
+          message,
+          code
+        });
+      }
+
+      function dfs(nodeId, curSum) {
+        if (!nodeId) return;
+        const node = nodes[nodeId];
+        path.push(node.value);
+        pathIds.push(nodeId);
+        curSum += node.value;
+        record("push", nodeId, curSum, `進入節點 ${node.value}，push 到 path，curSum 變成 ${curSum}。`, "push");
+        record("sum", nodeId, curSum, `目前 path = [${path.join(", ")}]，curSum = ${curSum}。`, "sum");
+
+        const isLeaf = !node.left && !node.right;
+        if (isLeaf) {
+          record("leaf", nodeId, curSum, `${node.value} 是 leaf，檢查 curSum 是否等於 targetSum ${targetSum}。`, "leaf");
+          if (curSum === targetSum) {
+            ans.push(path.slice());
+            record("copy", nodeId, curSum, `符合 targetSum。執行 ans.append(path[:])，把目前 path 的 copy 存入答案。`, "copy");
+          }
+        }
+
+        dfs(node.left, curSum);
+        dfs(node.right, curSum);
+        record("pop", nodeId, curSum, `離開節點 ${node.value} 前 path.pop()，還原給上一層遞迴。`, "pop");
+        path.pop();
+        pathIds.pop();
+      }
+
+      record("start", null, 0, "準備從 root 開始 DFS。", "base");
+      dfs("A", 0);
+      record("done", null, 0, "DFS 完成，回傳 ans。", "base");
+      return states;
+    }
+
+    function node(name, attrs = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+      return el;
+    }
+
+    function clearSvg() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function drawTree(state) {
+      clearSvg();
+      const pathSet = new Set(state.pathIds);
+      const successSet = new Set();
+      state.ans.flat().forEach((value) => {
+        Object.entries(nodes).forEach(([id, item]) => {
+          if (item.value === value && pathSet.has(id)) successSet.add(id);
+        });
+      });
+
+      Object.entries(nodes).forEach(([id, item]) => {
+        [item.left, item.right].forEach((childId) => {
+          if (!childId) return;
+          const child = nodes[childId];
+          svg.appendChild(node("line", {
+            x1: item.x,
+            y1: item.y,
+            x2: child.x,
+            y2: child.y,
+            class: `edge ${pathSet.has(id) && pathSet.has(childId) ? "active" : ""}`
+          }));
+        });
+      });
+
+      Object.entries(nodes).forEach(([id, item]) => {
+        const group = node("g", {
+          class: [
+            "node",
+            pathSet.has(id) ? "path" : "",
+            state.nodeId === id ? "current" : "",
+            successSet.has(id) ? "success" : ""
+          ].join(" "),
+          transform: `translate(${item.x} ${item.y})`
+        });
+        group.appendChild(node("circle", { r: 26 }));
+        const text = node("text", { x: 0, y: 1 });
+        text.textContent = String(item.value);
+        group.appendChild(text);
+        svg.appendChild(group);
+      });
+    }
+
+    function renderPills(container, items, className) {
+      container.innerHTML = "";
+      if (items.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "pill";
+        empty.textContent = "empty";
+        container.appendChild(empty);
+        return;
+      }
+      items.forEach((item) => {
+        const pill = document.createElement("span");
+        pill.className = `pill ${className}`;
+        pill.textContent = Array.isArray(item) ? `[${item.join(", ")}]` : String(item);
+        container.appendChild(pill);
+      });
+    }
+
+    function renderCode(code) {
+      document.querySelectorAll(".line").forEach((line) => line.classList.remove("hotline"));
+      const line = document.querySelector(`[data-code="${code}"]`);
+      if (line) line.classList.add("hotline");
+    }
+
+    function render() {
+      const states = makeSnapshots();
+      step = Math.max(0, Math.min(step, states.length - 1));
+      const state = states[step];
+
+      drawTree(state);
+      renderCode(state.code);
+      renderPills(pathList, state.path, "path");
+      renderPills(ansList, state.ans, "ans");
+
+      stepMetric.textContent = `${step} / ${states.length - 1}`;
+      nodeMetric.textContent = state.nodeId ? String(nodes[state.nodeId].value) : "-";
+      sumMetric.textContent = `${state.curSum} / ${targetSum}`;
+      ansMetric.textContent = String(state.ans.length);
+      pathState.textContent = `[${state.path.join(", ")}]`;
+      ansState.textContent = `[${state.ans.map((item) => `[${item.join(", ")}]`).join(", ")}]`;
+      explainText.textContent = state.message;
+    }
+
+    function next() {
+      const maxStep = makeSnapshots().length - 1;
+      step = step + 1 > maxStep ? 0 : step + 1;
+      render();
+    }
+
+    function prev() {
+      step = Math.max(0, step - 1);
+      render();
+    }
+
+    function reset() {
+      stop();
+      step = 0;
+      render();
+    }
+
+    function play() {
+      if (playing) {
+        stop();
+        return;
+      }
+      playing = true;
+      playBtn.textContent = "暫停";
+      timer = window.setInterval(() => {
+        if (step >= makeSnapshots().length - 1) {
+          stop();
+          return;
+        }
+        next();
+      }, 900);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = "播放";
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    document.querySelector("#nextBtn").addEventListener("click", next);
+    document.querySelector("#prevBtn").addEventListener("click", prev);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    playBtn.addEventListener("click", play);
+
+    render();
+  </script>
+</body>
+</html>
