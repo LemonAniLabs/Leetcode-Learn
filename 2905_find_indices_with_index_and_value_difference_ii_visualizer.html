@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2905. Find Indices With Index and Value Difference II Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --hot: #c2410c;
+      --best: #15803d;
+      --blue: #2563eb;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1340px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 900px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(640px, 1.15fr) minmax(390px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar, .panel, .stage { padding: 16px; }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover { background: var(--accent-dark); }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    .array {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(70px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .cell {
+      position: relative;
+      min-height: 118px;
+      padding: 12px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .cell.candidate {
+      border-color: rgba(37, 99, 235, 0.42);
+      background: #eff6ff;
+    }
+
+    .cell.current {
+      border-color: var(--hot);
+      background: #fff7ed;
+    }
+
+    .cell.min {
+      outline: 3px solid rgba(21, 128, 61, 0.32);
+      outline-offset: -3px;
+    }
+
+    .cell.max {
+      box-shadow: inset 0 0 0 3px rgba(194, 65, 12, 0.32);
+    }
+
+    .idx {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .marker {
+      position: absolute;
+      left: 7px;
+      right: 7px;
+      bottom: 9px;
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      min-height: 22px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 22px;
+    }
+
+    .tag.min { background: #dcfce7; color: var(--best); }
+    .tag.max { background: #fed7aa; color: var(--hot); }
+    .tag.j { background: #fee2e2; color: var(--hot); }
+    .tag.ok { background: #dbeafe; color: var(--blue); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric, .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span, .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong, .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel { border-top: 1px solid var(--line); }
+
+    .formula, .pitfall {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .formula b, .pitfall b { color: var(--hot); }
+
+    .pitfall {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      font-family: inherit;
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .code {
+      margin: 10px 0 0;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .line {
+      display: block;
+      padding: 0 8px;
+      border-radius: 4px;
+    }
+
+    .line.hotline { background: rgba(194, 65, 12, 0.45); }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 46px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--accent); font-size: 20px; }
+    details[open] summary { border-bottom: 1px solid var(--line); background: var(--soft); }
+    details[open] summary::after { content: "-"; }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 1040px) {
+      main { width: min(100vw - 20px, 800px); padding-top: 16px; }
+      .header, .bar { display: block; }
+      .controls { justify-content: flex-start; margin-top: 12px; }
+      .layout { grid-template-columns: 1fr; }
+      .array { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 600px) {
+      main { width: calc(100vw - 14px); }
+      .bar, .panel, .stage { padding: 12px; }
+      .array, .metrics, .states, .complexity-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>2905. Find Indices With Index and Value Difference II</h1>
+        <p class="lead">固定右端 `j` 往右掃，合法左端只會來自 `i <= j - indexDifference`。維護合法候選中的 prefix min / prefix max，就能 O(n) 找答案。</p>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>Prefix min / max candidates</h2>
+            <p class="hint">藍色是目前可和 j 配對的合法 prefix 候選；綠色標記 min_idx，橘色標記 max_idx，紅色是目前 j。</p>
+          </div>
+          <div class="controls">
+            <button class="icon" id="prevBtn" type="button" aria-label="上一步">‹</button>
+            <button class="primary" id="playBtn" type="button">播放</button>
+            <button class="icon" id="nextBtn" type="button" aria-label="下一步">›</button>
+            <button id="resetBtn" type="button">重設</button>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="array" id="array"></div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>步驟</span>
+            <strong id="stepMetric">0 / 0</strong>
+          </div>
+          <div class="metric">
+            <span>j</span>
+            <strong id="jMetric">-</strong>
+          </div>
+          <div class="metric">
+            <span>min_idx / max_idx</span>
+            <strong id="idxMetric">- / -</strong>
+          </div>
+          <div class="metric">
+            <span>result</span>
+            <strong id="resultMetric">[-1, -1]</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>核心不變量</h2>
+          <div class="formula">
+            i = j - indexDifference<br>
+            legal candidates: index <= i<br>
+            check <b>nums[j] - min_value</b> or <b>max_value - nums[j]</b>
+          </div>
+          <p class="explain" id="explainText"></p>
+          <div class="pitfall">
+            <b>容易漏掉：</b>這不是一般 sliding window。候選集合只會往右擴張，不需要移除舊 index；我們只要維護目前合法 prefix 裡的最小值位置和最大值位置。
+          </div>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(1)</strong>
+                </div>
+              </div>
+              <p>每個 j 掃一次，每次只更新 min_idx / max_idx 並做常數次比較，所以時間是 O(n)。</p>
+              <p>只保存兩個候選 index 和結果狀態，不需要額外資料結構，所以空間是 O(1)。</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h2>狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>candidate boundary</span>
+              <code id="candidateState">i = -</code>
+            </div>
+            <div class="state">
+              <span>checks</span>
+              <code id="checkState">-</code>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼對照</h2>
+          <pre class="code"><code><span class="line" data-code="init">min_idx = max_idx = 0</span>
+<span class="line" data-code="loop">for j in range(len(nums)):</span>
+<span class="line" data-code="boundary">    i = j - indexDifference</span>
+<span class="line" data-code="update-min">    if nums[i] < nums[min_idx]: min_idx = i</span>
+<span class="line" data-code="update-max">    if nums[i] > nums[max_idx]: max_idx = i</span>
+<span class="line" data-code="check-min">    if abs(nums[j] - nums[min_idx]) >= valueDifference</span>
+<span class="line" data-code="check-max">    if abs(nums[j] - nums[max_idx]) >= valueDifference</span>
+<span class="line" data-code="return">return [-1, -1]</span></code></pre>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const nums = [5, 1, 4, 1, 9, 2];
+    const indexDifference = 2;
+    const valueDifference = 4;
+    const arrayEl = document.querySelector("#array");
+    const playBtn = document.querySelector("#playBtn");
+    const stepMetric = document.querySelector("#stepMetric");
+    const jMetric = document.querySelector("#jMetric");
+    const idxMetric = document.querySelector("#idxMetric");
+    const resultMetric = document.querySelector("#resultMetric");
+    const explainText = document.querySelector("#explainText");
+    const candidateState = document.querySelector("#candidateState");
+    const checkState = document.querySelector("#checkState");
+    let step = 0;
+    let playing = false;
+    let timer = null;
+
+    function makeSnapshots() {
+      const states = [];
+      let minIdx = 0;
+      let maxIdx = 0;
+      let result = null;
+
+      states.push({
+        j: -1,
+        boundary: -1,
+        minIdx,
+        maxIdx,
+        result,
+        check: "-",
+        code: "init",
+        message: "初始化 min_idx = 0, max_idx = 0。它們會代表目前合法 prefix 中 nums[i] 最小與最大的 index。"
+      });
+
+      for (let j = 0; j < nums.length; j += 1) {
+        const boundary = j - indexDifference;
+        if (boundary < 0) {
+          states.push({
+            j,
+            boundary,
+            minIdx,
+            maxIdx,
+            result,
+            check: "not enough distance",
+            code: "boundary",
+            message: `j = ${j} 時，j - indexDifference = ${boundary}，還沒有任何合法 i 可以配對。`
+          });
+          continue;
+        }
+
+        if (nums[boundary] < nums[minIdx]) minIdx = boundary;
+        if (nums[boundary] > nums[maxIdx]) maxIdx = boundary;
+
+        const minDiff = Math.abs(nums[j] - nums[minIdx]);
+        const maxDiff = Math.abs(nums[j] - nums[maxIdx]);
+        states.push({
+          j,
+          boundary,
+          minIdx,
+          maxIdx,
+          result,
+          check: `min diff ${minDiff}, max diff ${maxDiff}`,
+          code: "check-min",
+          message: `加入新的合法候選 i = ${boundary}。目前 min_idx = ${minIdx}, max_idx = ${maxIdx}。先檢查 nums[j] 和 nums[min_idx] 的差距 ${minDiff}。`
+        });
+
+        if (minDiff >= valueDifference) {
+          result = [minIdx, j];
+          states.push({
+            j,
+            boundary,
+            minIdx,
+            maxIdx,
+            result,
+            check: `${minDiff} >= ${valueDifference}`,
+            code: "check-min",
+            message: `成功：abs(nums[${j}] - nums[${minIdx}]) = ${minDiff} >= ${valueDifference}，回傳 [${minIdx}, ${j}]。`
+          });
+          break;
+        }
+
+        states.push({
+          j,
+          boundary,
+          minIdx,
+          maxIdx,
+          result,
+          check: `max diff ${maxDiff}`,
+          code: "check-max",
+          message: `min_idx 不成立，再檢查 nums[j] 和 nums[max_idx] 的差距 ${maxDiff}。`
+        });
+
+        if (maxDiff >= valueDifference) {
+          result = [maxIdx, j];
+          states.push({
+            j,
+            boundary,
+            minIdx,
+            maxIdx,
+            result,
+            check: `${maxDiff} >= ${valueDifference}`,
+            code: "check-max",
+            message: `成功：abs(nums[${j}] - nums[${maxIdx}]) = ${maxDiff} >= ${valueDifference}，回傳 [${maxIdx}, ${j}]。`
+          });
+          break;
+        }
+      }
+
+      if (!result) {
+        states.push({
+          j: nums.length,
+          boundary: nums.length - indexDifference,
+          minIdx,
+          maxIdx,
+          result: [-1, -1],
+          check: "not found",
+          code: "return",
+          message: "掃完所有 j 都找不到符合條件的 pair，回傳 [-1, -1]。"
+        });
+      }
+      return states;
+    }
+
+    function renderArray(state) {
+      arrayEl.innerHTML = "";
+      nums.forEach((value, index) => {
+        const cell = document.createElement("div");
+        const classes = ["cell"];
+        if (index <= state.boundary && state.boundary >= 0) classes.push("candidate");
+        if (index === state.j) classes.push("current");
+        if (index === state.minIdx && state.boundary >= 0) classes.push("min");
+        if (index === state.maxIdx && state.boundary >= 0) classes.push("max");
+        cell.className = classes.join(" ");
+        const tags = [];
+        if (index <= state.boundary && state.boundary >= 0) tags.push("legal");
+        if (index === state.j) tags.push("j");
+        if (index === state.minIdx && state.boundary >= 0) tags.push("min");
+        if (index === state.maxIdx && state.boundary >= 0) tags.push("max");
+        cell.innerHTML = `
+          <div class="idx">idx = ${index}</div>
+          <div class="value">${value}</div>
+          <div class="marker">${tags.map((tag) => `<span class="tag ${tag}">${tag}</span>`).join("")}</div>
+        `;
+        arrayEl.appendChild(cell);
+      });
+    }
+
+    function renderCode(code) {
+      document.querySelectorAll(".line").forEach((line) => line.classList.remove("hotline"));
+      const line = document.querySelector(`[data-code="${code}"]`);
+      if (line) line.classList.add("hotline");
+      if (code === "check-min" || code === "check-max") {
+        document.querySelector('[data-code="loop"]').classList.add("hotline");
+        document.querySelector('[data-code="boundary"]').classList.add("hotline");
+        document.querySelector('[data-code="update-min"]').classList.add("hotline");
+        document.querySelector('[data-code="update-max"]').classList.add("hotline");
+      }
+    }
+
+    function render() {
+      const states = makeSnapshots();
+      step = Math.max(0, Math.min(step, states.length - 1));
+      const state = states[step];
+      renderArray(state);
+      renderCode(state.code);
+      stepMetric.textContent = `${step} / ${states.length - 1}`;
+      jMetric.textContent = state.j >= 0 && state.j < nums.length ? String(state.j) : "-";
+      idxMetric.textContent = state.boundary >= 0 ? `${state.minIdx} / ${state.maxIdx}` : "- / -";
+      resultMetric.textContent = state.result ? `[${state.result.join(", ")}]` : "[-1, -1]";
+      candidateState.textContent = `i <= ${state.boundary}`;
+      checkState.textContent = state.check;
+      explainText.textContent = state.message;
+    }
+
+    function next() {
+      const maxStep = makeSnapshots().length - 1;
+      step = step + 1 > maxStep ? 0 : step + 1;
+      render();
+    }
+
+    function prev() {
+      step = Math.max(0, step - 1);
+      render();
+    }
+
+    function reset() {
+      stop();
+      step = 0;
+      render();
+    }
+
+    function play() {
+      if (playing) {
+        stop();
+        return;
+      }
+      playing = true;
+      playBtn.textContent = "暫停";
+      timer = window.setInterval(() => {
+        if (step >= makeSnapshots().length - 1) {
+          stop();
+          return;
+        }
+        next();
+      }, 950);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = "播放";
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    document.querySelector("#nextBtn").addEventListener("click", next);
+    document.querySelector("#prevBtn").addEventListener("click", prev);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    playBtn.addEventListener("click", play);
+    render();
+  </script>
+</body>
+</html>
