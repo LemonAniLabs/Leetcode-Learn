@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2602. Minimum Operations to Make All Array Elements Equal Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --hot: #c2410c;
+      --best: #15803d;
+      --blue: #2563eb;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1360px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 900px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(640px, 1.15fr) minmax(390px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar, .panel, .stage { padding: 16px; }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .query-control {
+      display: grid;
+      grid-template-columns: auto minmax(200px, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    .query-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .query-pill {
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .query-pill.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .array {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(76px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .cell {
+      position: relative;
+      min-height: 128px;
+      padding: 12px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .cell.left {
+      border-color: rgba(37, 99, 235, 0.42);
+      background: #eff6ff;
+    }
+
+    .cell.right {
+      border-color: rgba(194, 65, 12, 0.32);
+      background: #fff7ed;
+    }
+
+    .idx {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .cost {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 10px;
+      min-height: 26px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 26px;
+    }
+
+    .cell.left .cost {
+      background: #dbeafe;
+      color: var(--blue);
+    }
+
+    .cell.right .cost {
+      background: #fed7aa;
+      color: var(--hot);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .metric, .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span, .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong, .state code {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel + .panel { border-top: 1px solid var(--line); }
+
+    .formula, .pitfall {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .breakdown {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .breakdown-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .breakdown-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .breakdown-card code {
+      display: block;
+      margin-top: 6px;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: normal;
+    }
+
+    .formula b, .pitfall b { color: var(--hot); }
+
+    .pitfall {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      font-family: inherit;
+    }
+
+    .explain {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .states {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .code {
+      margin: 10px 0 0;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 46px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--accent); font-size: 20px; }
+    details[open] summary { border-bottom: 1px solid var(--line); background: var(--soft); }
+    details[open] summary::after { content: "-"; }
+
+    .complexity-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 1040px) {
+      main { width: min(100vw - 20px, 800px); padding-top: 16px; }
+      .header, .bar { display: block; }
+      .layout { grid-template-columns: 1fr; }
+      .array { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .query-control { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      main { width: calc(100vw - 14px); }
+      .bar, .panel, .stage { padding: 12px; }
+      .array, .metrics, .states, .complexity-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>2602. Minimum Operations to Make All Array Elements Equal</h1>
+        <p class="lead">對每個 query q，把排序後的 nums 用二分搜切成左側小於 q、右側大於等於 q，兩邊成本都能用 prefix sum O(1) 算出來。</p>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>Sorted nums + prefix sum + bisect</h2>
+            <p class="hint">藍色左側需要增加到 q，橘色右側需要減少到 q。調整 q 可以看到分割點 p 如何移動。</p>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="query-pills" id="queryPills"></div>
+          <div class="query-control">
+            <strong>q = <span id="queryValue">7</span></strong>
+            <input id="querySlider" type="range" min="1" max="15" value="7">
+            <button id="resetBtn" type="button">回到範例</button>
+          </div>
+          <div class="array" id="array"></div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>分割點 p</span>
+            <strong id="pMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>left cost</span>
+            <strong id="leftMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>right cost</span>
+            <strong id="rightMetric">0</strong>
+          </div>
+          <div class="metric">
+            <span>answer</span>
+            <strong id="answerMetric">0</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>公式</h2>
+          <div class="formula" id="formulaBox"></div>
+          <p class="explain" id="explainText"></p>
+          <div class="breakdown" id="breakdownBox"></div>
+          <div class="pitfall">
+            <b>容易漏掉：</b>每個 query 後 nums 會 reset，但我們不需要真的修改 nums。排序和 prefix sum 只針對原始 nums 做一次，之後每個 query 都用同一份資料計算。
+          </div>
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="complexity-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O((n + m) log n)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(n)</strong>
+                </div>
+              </div>
+              <p>排序 nums 需要 O(n log n)。每個 query 用 `bisect_left` 找分割點，需要 O(log n)，共 m 個 query。</p>
+              <p>prefix sum 陣列長度是 n + 1，所以額外空間是 O(n)。</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h2>狀態</h2>
+          <div class="states">
+            <div class="state">
+              <span>sorted nums</span>
+              <code id="numsState">[]</code>
+            </div>
+            <div class="state">
+              <span>prefix</span>
+              <code id="prefixState">[]</code>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼</h2>
+          <pre class="code"><code>nums.sort()
+prefix = [0] + list(accumulate(nums))
+
+for q in queries:
+    p = bisect_left(nums, q)
+    cost_left = q * p - prefix[p]
+    cost_right = (prefix[n] - prefix[p]) - q * (n - p)
+    ans.append(cost_left + cost_right)</code></pre>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const nums = [1, 3, 5, 7, 9, 12, 15];
+    const queries = [7, 10];
+    const sorted = nums.slice().sort((a, b) => a - b);
+    const prefix = [0];
+    sorted.forEach((value) => prefix.push(prefix[prefix.length - 1] + value));
+
+    const queryPills = document.querySelector("#queryPills");
+    const querySlider = document.querySelector("#querySlider");
+    const queryValue = document.querySelector("#queryValue");
+    const arrayEl = document.querySelector("#array");
+    const pMetric = document.querySelector("#pMetric");
+    const leftMetric = document.querySelector("#leftMetric");
+    const rightMetric = document.querySelector("#rightMetric");
+    const answerMetric = document.querySelector("#answerMetric");
+    const formulaBox = document.querySelector("#formulaBox");
+    const breakdownBox = document.querySelector("#breakdownBox");
+    const explainText = document.querySelector("#explainText");
+    const numsState = document.querySelector("#numsState");
+    const prefixState = document.querySelector("#prefixState");
+
+    function bisectLeft(arr, target) {
+      let lo = 0;
+      let hi = arr.length;
+      while (lo < hi) {
+        const mid = Math.floor((lo + hi) / 2);
+        if (arr[mid] < target) lo = mid + 1;
+        else hi = mid;
+      }
+      return lo;
+    }
+
+    function compute(q) {
+      const n = sorted.length;
+      const p = bisectLeft(sorted, q);
+      const left = q * p - prefix[p];
+      const right = (prefix[n] - prefix[p]) - q * (n - p);
+      return { p, left, right, total: left + right };
+    }
+
+    function renderPills(q) {
+      queryPills.innerHTML = "";
+      queries.forEach((value) => {
+        const pill = document.createElement("button");
+        pill.className = `query-pill ${value === q ? "active" : ""}`;
+        pill.type = "button";
+        pill.textContent = `query ${value}`;
+        pill.addEventListener("click", () => {
+          querySlider.value = String(value);
+          render(value);
+        });
+        queryPills.appendChild(pill);
+      });
+    }
+
+    function renderArray(q, state) {
+      arrayEl.innerHTML = "";
+      sorted.forEach((value, index) => {
+        const side = index < state.p ? "left" : "right";
+        const cost = index < state.p ? q - value : value - q;
+        const cell = document.createElement("div");
+        cell.className = `cell ${side}`;
+        cell.innerHTML = `
+          <div class="idx">idx = ${index}</div>
+          <div class="value">${value}</div>
+          <div class="cost">${side === "left" ? "increase" : "decrease"} ${cost}</div>
+        `;
+        arrayEl.appendChild(cell);
+      });
+    }
+
+    function render(q) {
+      const state = compute(q);
+      queryValue.textContent = String(q);
+      renderPills(q);
+      renderArray(q, state);
+      pMetric.textContent = String(state.p);
+      leftMetric.textContent = String(state.left);
+      rightMetric.textContent = String(state.right);
+      answerMetric.textContent = String(state.total);
+      numsState.textContent = `[${sorted.join(", ")}]`;
+      prefixState.textContent = `[${prefix.join(", ")}]`;
+      formulaBox.innerHTML = `
+        p = bisect_left(nums, ${q}) = ${state.p}<br>
+        left = ${q} * ${state.p} - prefix[${state.p}] = <b>${state.left}</b><br>
+        right = (prefix[n] - prefix[${state.p}]) - ${q} * (n - ${state.p}) = <b>${state.right}</b>
+      `;
+      const leftValues = sorted.slice(0, state.p);
+      const rightValues = sorted.slice(state.p);
+      const leftTerms = leftValues.map((value) => `(${q}-${value})`).join(" + ") || "0";
+      const rightTerms = rightValues.map((value) => `(${value}-${q})`).join(" + ") || "0";
+      const leftSum = leftValues.reduce((sum, value) => sum + value, 0);
+      const rightSum = rightValues.reduce((sum, value) => sum + value, 0);
+      breakdownBox.innerHTML = `
+        <div class="breakdown-card">
+          <strong>左側：元素 &lt; q，要往上補</strong>
+          values = [${leftValues.join(", ")}]<br>
+          <code>${leftTerms} = ${state.left}</code>
+          <code>${q} * ${state.p} - ${leftSum} = ${state.left}</code>
+          本質是「${state.p} 個 q 的總和」減掉「左側元素實際總和」。
+        </div>
+        <div class="breakdown-card">
+          <strong>右側：元素 ≥ q，要往下削</strong>
+          values = [${rightValues.join(", ")}]<br>
+          <code>${rightTerms} = ${state.right}</code>
+          <code>${rightSum} - ${q} * ${rightValues.length} = ${state.right}</code>
+          本質是「右側元素實際總和」減掉「${rightValues.length} 個 q 的總和」。
+        </div>
+      `;
+      explainText.textContent = `左側 ${state.p} 個元素都小於 ${q}，需要增加到 ${q}。右側 ${sorted.length - state.p} 個元素都大於等於 ${q}，需要減少到 ${q}。總操作數是 ${state.total}。`;
+    }
+
+    querySlider.addEventListener("input", () => render(Number(querySlider.value)));
+    document.querySelector("#resetBtn").addEventListener("click", () => {
+      querySlider.value = "7";
+      render(7);
+    });
+
+    render(Number(querySlider.value));
+  </script>
+</body>
+</html>
