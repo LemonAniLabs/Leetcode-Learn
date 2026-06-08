@@ -321,6 +321,8 @@
     .code {
       margin: 10px 0 0;
       overflow-x: auto;
+      white-space: pre;
+      min-height: 360px;
       padding: 14px;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -458,6 +460,7 @@
           <h2>公式</h2>
           <div class="formula" id="formulaBox"></div>
           <p class="explain" id="explainText"></p>
+          <p class="explain">`p` 是第一個 `nums[p] >= q` 的位置。排序後，左邊一定都小於 q，需要往上補；右邊一定都大於等於 q，需要往下削。`prefix[p]` 是左側總和，`prefix[n] - prefix[p]` 是右側總和。</p>
           <div class="breakdown" id="breakdownBox"></div>
           <div class="pitfall">
             <b>容易漏掉：</b>每個 query 後 nums 會 reset，但我們不需要真的修改 nums。排序和 prefix sum 只針對原始 nums 做一次，之後每個 query 都用同一份資料計算。
@@ -497,14 +500,36 @@
 
         <section class="panel">
           <h2>程式碼</h2>
-          <pre class="code"><code>nums.sort()
-prefix = [0] + list(accumulate(nums))
+          <pre class="code"><code>from bisect import bisect_left
+from itertools import accumulate
+from typing import List
 
-for q in queries:
-    p = bisect_left(nums, q)
-    cost_left = q * p - prefix[p]
-    cost_right = (prefix[n] - prefix[p]) - q * (n - p)
-    ans.append(cost_left + cost_right)</code></pre>
+class Solution:
+    def minOperations(
+        self,
+        nums: List[int],
+        queries: List[int]
+    ) -> List[int]:
+        nums.sort()
+        n = len(nums)
+        prefix = [0] + list(accumulate(nums))
+        ans = []
+
+        for q in queries:
+            # p: first index where nums[p] >= q
+            p = bisect_left(nums, q)
+
+            # left side nums[0:p] are smaller than q.
+            # They need to be increased to q.
+            cost_left = q * p - prefix[p]
+
+            # right side nums[p:n] are greater than or equal to q.
+            # They need to be decreased to q.
+            cost_right = (prefix[n] - prefix[p]) - q * (n - p)
+
+            ans.append(cost_left + cost_right)
+
+        return ans</code></pre>
         </section>
       </aside>
     </section>
