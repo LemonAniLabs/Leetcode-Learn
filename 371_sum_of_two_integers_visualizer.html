@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>371. Sum of Two Integers Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --ink: #16202a;
+      --muted: #657182;
+      --line: #d9dee7;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --blue: #2563eb;
+      --hot: #c2410c;
+      --good: #15803d;
+      --shadow: 0 16px 42px rgba(22, 32, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.09), transparent 34%),
+        linear-gradient(315deg, rgba(37, 99, 235, 0.08), transparent 31%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1360px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 920px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(650px, 1.1fr) minmax(420px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .bar, .panel, .stage { padding: 16px; }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls, .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .controls {
+      justify-content: flex-end;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #a7b2c1;
+      background: var(--soft);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    button.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .examples {
+      margin-bottom: 14px;
+    }
+
+    .step-title {
+      margin: 0 0 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .step-title strong {
+      color: var(--ink);
+    }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .state span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .state strong {
+      display: block;
+      color: var(--ink);
+      font-size: 19px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bits {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bit-row {
+      display: grid;
+      grid-template-columns: 84px 1fr 110px;
+      gap: 10px;
+      align-items: center;
+      min-height: 54px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .bit-label {
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .binary {
+      overflow-x: auto;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+
+    .decimal {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .op-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .op-card {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .op-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .op-card code {
+      display: block;
+      margin-top: 6px;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: normal;
+    }
+
+    .panel + .panel { border-top: 1px solid var(--line); }
+
+    .note, .pitfall {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .note strong, .pitfall strong {
+      color: var(--ink);
+    }
+
+    .pitfall {
+      border-color: #fed7aa;
+      background: #fff7ed;
+    }
+
+    .range-table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .range-table th,
+    .range-table td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .range-table th {
+      background: var(--soft);
+      color: var(--ink);
+    }
+
+    .range-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .range-table code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .code {
+      margin: 10px 0 0;
+      overflow-x: auto;
+      white-space: pre;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101820;
+      color: #edf2f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 46px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--accent); font-size: 20px; }
+    details[open] summary { border-bottom: 1px solid var(--line); background: var(--soft); }
+    details[open] summary::after { content: "-"; }
+
+    .detail-body {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .complexity-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .complexity-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .complexity-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 1060px) {
+      main { width: min(100vw - 20px, 820px); padding-top: 16px; }
+      .header, .bar { display: block; }
+      .controls { justify-content: flex-start; margin-top: 12px; }
+      .layout { grid-template-columns: 1fr; }
+      .state-grid, .op-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      main { width: calc(100vw - 14px); }
+      .bar, .panel, .stage { padding: 12px; }
+      .bit-row { grid-template-columns: 1fr; }
+      .decimal { text-align: left; }
+      .complexity-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <div>
+        <h1>371. Sum of Two Integers</h1>
+        <p class="lead">不用 + / -，用 XOR 表示不含進位的加法，用 AND + 左移表示進位。Python 需要把每次結果限制在 32-bit，才能模擬 LeetCode 常見的 signed int 行為。</p>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="bar">
+          <div>
+            <h2>Bit addition stepper</h2>
+            <p class="hint">每一輪把加法拆成 sum without carry 與 carry。當 carry 變成 0，32-bit pattern 就是答案。</p>
+          </div>
+          <div class="controls">
+            <button id="prevBtn" type="button">上一步</button>
+            <button id="nextBtn" class="primary" type="button">下一步</button>
+            <button id="resetBtn" type="button">重播</button>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="examples" id="examples"></div>
+          <p class="step-title" id="stepTitle"></p>
+
+          <div class="state-grid">
+            <div class="state">
+              <span>step</span>
+              <strong id="stepState">0 / 0</strong>
+            </div>
+            <div class="state">
+              <span>current a as signed</span>
+              <strong id="signedA">0</strong>
+            </div>
+            <div class="state">
+              <span>current b as signed carry</span>
+              <strong id="signedB">0</strong>
+            </div>
+          </div>
+
+          <div class="bits" id="bits"></div>
+
+          <div class="op-grid">
+            <div class="op-card">
+              <strong>XOR</strong>
+              相同 bit 抵消，不同 bit 留下；這就是「不處理進位」的加法。
+              <code>a ^ b</code>
+            </div>
+            <div class="op-card">
+              <strong>AND + shift</strong>
+              兩邊都是 1 的位置會產生進位，進位要加到左邊一格。
+              <code>(a & b) << 1</code>
+            </div>
+            <div class="op-card">
+              <strong>MASK</strong>
+              只保留低 32 bits，避免 Python 的無限長整數讓負數帶著無限個 leading 1。
+              <code>& 0xffffffff</code>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <section class="panel">
+          <h2>Unsigned / Signed 範圍</h2>
+          <table class="range-table">
+            <tr>
+              <th>Interpretation</th>
+              <th>Range</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td>Unsigned 32-bit</td>
+              <td><code>0</code> 到 <code>2^32 - 1</code></td>
+              <td>只把 32 個 bits 當作非負整數看。</td>
+            </tr>
+            <tr>
+              <td>Signed 32-bit</td>
+              <td><code>-2^31</code> 到 <code>2^31 - 1</code></td>
+              <td>最高位是 sign bit。0 表示非負，1 表示負數。</td>
+            </tr>
+          </table>
+          <div class="note">
+            <strong>同一串 32-bit pattern 可以有兩種解讀。</strong><br>
+            <code>11111111 11111111 11111111 11111111</code> 當 unsigned 是 <code>4294967295</code>，但當 signed two's complement 是 <code>-1</code>。
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>為什麼要用 MASK</h2>
+          <div class="note">
+            Python 的 int 沒有固定 32-bit 上限，負數做 bit operation 時概念上有無限多個 leading 1。這跟 32-bit int 不一樣，所以每輪都用 <code>MASK = 0xffffffff</code> 把結果裁回低 32 bits。
+          </div>
+          <div class="pitfall">
+            <strong>負數特別需要 mask：</strong>如果沒有 mask，像 <code>-1</code> 的 bit pattern 不是只有 32 個 1，而是可以一直往左延伸的 1。carry 可能無法照 32-bit 規則收斂到 0。
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>最後如何還原負數</h2>
+          <div class="note" id="restoreBox"></div>
+          <div class="note">
+            經過 mask 後，Python 看到的 <code>a</code> 是一個非負整數，也就是 unsigned interpretation。因此 <code>a <= MAX_INT</code> 不是在問「原本是不是負數」，而是在檢查 32-bit sign bit 是否為 0。
+          </div>
+          <details open>
+            <summary>還原規則</summary>
+            <div class="detail-body">
+              <p><code>MAX_INT = 0x7fffffff = 2^31 - 1</code>。如果 masked value 小於等於它，最高位是 0，可以直接回傳。</p>
+              <p>如果 masked value 大於 <code>MAX_INT</code>，代表最高位是 1，在 signed 32-bit 中是負數。要轉回 Python 的負數值，就減掉 <code>2^32</code>。</p>
+              <p>例如 <code>0xffffffff</code> 是 <code>4294967295</code>，還原成 <code>4294967295 - 4294967296 = -1</code>。</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <h2>程式碼</h2>
+          <pre class="code"><code>class Solution:
+    def getSum(self, a: int, b: int) -> int:
+        MASK = 0xffffffff
+        MAX_INT = 0x7fffffff
+
+        while b != 0:
+            carry = ((a & b) << 1) & MASK
+            a = (a ^ b) & MASK
+            b = carry
+
+        return a if a <= MAX_INT else a - (2**32)</code></pre>
+
+          <details>
+            <summary>Time / Space Complexity</summary>
+            <div class="detail-body">
+              <div class="complexity-grid">
+                <div class="complexity-card">
+                  <span>Time Complexity</span>
+                  <strong>O(1)</strong>
+                </div>
+                <div class="complexity-card">
+                  <span>Space Complexity</span>
+                  <strong>O(1)</strong>
+                </div>
+              </div>
+              <p>題目通常以 32-bit signed int 模擬，所以迴圈最多把 carry 往左推過固定 32 個 bit，時間是 O(32)，寫成 O(1)。</p>
+              <p>只使用固定數量變數：<code>MASK</code>、<code>MAX_INT</code>、<code>carry</code>、<code>a</code>、<code>b</code>。</p>
+            </div>
+          </details>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const MASK = 0xffffffffn;
+    const MAX_INT = 0x7fffffffn;
+    const TWO32 = 2n ** 32n;
+    const examples = [
+      { label: "1 + 2", a: 1, b: 2 },
+      { label: "2 + 3", a: 2, b: 3 },
+      { label: "-1 + 1", a: -1, b: 1 },
+      { label: "-2 + 3", a: -2, b: 3 },
+      { label: "-5 + -7", a: -5, b: -7 }
+    ];
+
+    let activeExample = 0;
+    let steps = [];
+    let stepIndex = 0;
+
+    const examplesBox = document.querySelector("#examples");
+    const bitsBox = document.querySelector("#bits");
+    const stepTitle = document.querySelector("#stepTitle");
+    const stepState = document.querySelector("#stepState");
+    const signedA = document.querySelector("#signedA");
+    const signedB = document.querySelector("#signedB");
+    const restoreBox = document.querySelector("#restoreBox");
+    const prevBtn = document.querySelector("#prevBtn");
+    const nextBtn = document.querySelector("#nextBtn");
+    const resetBtn = document.querySelector("#resetBtn");
+
+    function toMasked(value) {
+      return BigInt(value) & MASK;
+    }
+
+    function toSigned(masked) {
+      return masked <= MAX_INT ? masked : masked - TWO32;
+    }
+
+    function groupedBinary(masked) {
+      const raw = masked.toString(2).padStart(32, "0").slice(-32);
+      return raw.match(/.{1,4}/g).join(" ");
+    }
+
+    function buildSteps(example) {
+      let a = toMasked(example.a);
+      let b = toMasked(example.b);
+      const result = [];
+      let guard = 0;
+
+      while (true) {
+        const carry = ((a & b) << 1n) & MASK;
+        const xor = (a ^ b) & MASK;
+        result.push({
+          a,
+          b,
+          xor,
+          carry,
+          title: b === 0n
+            ? "carry 已經是 0，迴圈結束。現在的 a 就是 32-bit 結果 pattern。"
+            : "先用 XOR 算出不含進位的加法，再用 AND + 左移算出下一輪要加的 carry。"
+        });
+        if (b === 0n) break;
+        a = xor;
+        b = carry;
+        guard += 1;
+        if (guard > 34) break;
+      }
+      return result;
+    }
+
+    function renderExamples() {
+      examplesBox.innerHTML = "";
+      examples.forEach((example, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = index === activeExample ? "active" : "";
+        button.textContent = example.label;
+        button.addEventListener("click", () => {
+          activeExample = index;
+          reset();
+        });
+        examplesBox.appendChild(button);
+      });
+    }
+
+    function bitRow(label, value, note) {
+      return `
+        <div class="bit-row">
+          <div class="bit-label">${label}</div>
+          <div class="binary">${groupedBinary(value)}</div>
+          <div class="decimal">${note}</div>
+        </div>
+      `;
+    }
+
+    function render() {
+      const step = steps[stepIndex];
+      const finalStep = steps[steps.length - 1];
+      const finalUnsigned = finalStep.a;
+      const finalSigned = toSigned(finalUnsigned);
+      const signBit = finalUnsigned > MAX_INT ? "1" : "0";
+
+      stepTitle.innerHTML = `<strong>${examples[activeExample].label}</strong> · ${step.title}`;
+      stepState.textContent = `${stepIndex + 1} / ${steps.length}`;
+      signedA.textContent = `${toSigned(step.a)} (${step.a.toString()} unsigned)`;
+      signedB.textContent = `${toSigned(step.b)} (${step.b.toString()} unsigned)`;
+
+      bitsBox.innerHTML = [
+        bitRow("a", step.a, `${step.a.toString()} unsigned`),
+        bitRow("b", step.b, `${step.b.toString()} unsigned`),
+        bitRow("a ^ b", step.xor, "sum without carry"),
+        bitRow("carry", step.carry, "(a & b) << 1")
+      ].join("");
+
+      restoreBox.innerHTML = `
+        目前範例最後得到的 masked value 是 <strong>${finalUnsigned.toString()}</strong>，
+        binary 最高位 sign bit 是 <strong>${signBit}</strong>。
+        ${finalUnsigned <= MAX_INT
+          ? `因為它 <= MAX_INT，所以 signed result 直接是 <strong>${finalSigned.toString()}</strong>。`
+          : `因為它 > MAX_INT，所以它代表 signed 負數；還原為 ${finalUnsigned.toString()} - 2^32 = <strong>${finalSigned.toString()}</strong>。`}
+      `;
+
+      prevBtn.disabled = stepIndex === 0;
+      nextBtn.disabled = stepIndex === steps.length - 1;
+    }
+
+    function reset() {
+      steps = buildSteps(examples[activeExample]);
+      stepIndex = 0;
+      renderExamples();
+      render();
+    }
+
+    prevBtn.addEventListener("click", () => {
+      stepIndex = Math.max(0, stepIndex - 1);
+      render();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      stepIndex = Math.min(steps.length - 1, stepIndex + 1);
+      render();
+    });
+
+    resetBtn.addEventListener("click", reset);
+
+    reset();
+  </script>
+</body>
+</html>
